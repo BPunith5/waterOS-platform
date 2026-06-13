@@ -14,6 +14,7 @@ import {
   Trash2,
   User,
 } from 'lucide-react';
+import { OceanBackground } from '@/components/water/OceanBackground';
 import { GlassSurface } from '@/components/glass/GlassSurface';
 import { PressableScale } from '@/components/glass/PressableScale';
 import { Reveal } from '@/components/glass/Reveal';
@@ -112,6 +113,7 @@ export function DevPreviewPage() {
 
   return (
     <div className="relative mx-auto max-w-3xl px-6 py-12 pb-32">
+      <OceanBackground />
       <header className="mb-10 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-light" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
