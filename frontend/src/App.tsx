@@ -5,6 +5,9 @@ import { AppShell } from './layouts/AppShell';
 import { LoginPage } from './pages/auth/Login';
 import { SignupPage } from './pages/auth/Signup';
 import { DashboardPage } from './pages/Dashboard';
+import { TanksPage } from './pages/tanks/TanksPage';
+import { TankFormPage } from './pages/tanks/TankFormPage';
+import { TankDetailPage } from './pages/tanks/TankDetailPage';
 import { DevPreviewPage } from './pages/DevPreview';
 
 function App() {
@@ -18,6 +21,10 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<AppShell />}>
               <Route path="/" element={<DashboardPage />} />
+              <Route path="/tanks" element={<TanksPage />} />
+              <Route path="/tanks/new" element={<TankFormPage mode="create" />} />
+              <Route path="/tanks/:id" element={<TankDetailPage />} />
+              <Route path="/tanks/:id/edit" element={<TankFormPage mode="edit" />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
