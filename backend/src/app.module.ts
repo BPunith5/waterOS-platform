@@ -8,6 +8,11 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { TanksModule } from './tanks/tanks.module';
+import { DevicesModule } from './devices/devices.module';
+import { TelemetryModule } from './telemetry/telemetry.module';
+import { AlertsModule } from './alerts/alerts.module';
+import { RealtimeModule } from './realtime/realtime.module';
+import { SimulationModule } from './simulation/simulation.module';
 
 @Module({
   imports: [
@@ -25,6 +30,11 @@ import { TanksModule } from './tanks/tanks.module';
     UsersModule,
     AuthModule,
     TanksModule,
+    DevicesModule,
+    TelemetryModule,
+    AlertsModule,
+    RealtimeModule,
+    SimulationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
