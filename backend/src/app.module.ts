@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ScheduleModule } from '@nestjs/schedule';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import configuration from './config/configuration';
 import { AppController } from './app.controller';
@@ -20,6 +21,7 @@ import { SimulationModule } from './simulation/simulation.module';
       isGlobal: true,
       load: [configuration],
     }),
+    ScheduleModule.forRoot(),
     MongooseModule.forRootAsync({
       useFactory: async () => {
         const uri =

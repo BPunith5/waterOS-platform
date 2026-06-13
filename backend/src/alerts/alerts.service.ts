@@ -1,11 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Cron } from '@nestjs/schedule';
+import { Model, QueryFilter, Types } from 'mongoose';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
-import { DeviceDocument } from '../devices/schemas/device.schema';
+import { Device, DeviceDocument } from '../devices/schemas/device.schema';
 import { TelemetryDocument } from '../telemetry/schemas/telemetry.schema';
 import { Alert, AlertDocument } from './schemas/alert.schema';
-import { ALERT_DEDUP_WINDOW_MS, AlertSeverity, AlertType } from './alert-thresholds';
+import { ALERT_DEDUP_WINDOW_MS, AlertSeverity, AlertType, OFFLINE_MINUTES } from './alert-thresholds';
 
 type CreateAlertInput = {
   userId: Types.ObjectId;
@@ -23,8 +24,51 @@ type CreateAlertInput = {
 export class AlertsService {
   constructor(
     @InjectModel(Alert.name) private readonly alertModel: Model<Alert>,
+    @InjectModel(Device.name) private readonly deviceModel: Model<Device>,
     private readonly realtimeGateway: RealtimeGateway,
   ) {}
+
+  findAllForUser(userId: Types.ObjectId, severity?: AlertSeverity): Promise<AlertDocument[]> {
+    const filter: QueryFilter<Alert> = { userId };
+    if (severity) filter.severity = severity;
+    return this.alertModel
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .populate('deviceId', 'deviceId deviceName')
+      .populate('tankId', 'tankName')
+      .exec();
+  }
+
+  async markRead(userId: Types.ObjectId, id: string, read: boolean): Promise<AlertDocument> {
+    const alert = await this.alertModel.findById(id).exec();
+    if (!alert) throw new NotFoundException('Alert not found');
+    if (!alert.userId.equals(userId)) throw new ForbiddenException('Not your alert');
+    alert.read = read;
+    return alert.save();
+  }
+
+  @Cron('*/5 * * * *')
+  async checkOfflineDevices(): Promise<void> {
+    const cutoff = new Date(Date.now() - OFFLINE_MINUTES * 60 * 1000);
+    const devices = await this.deviceModel
+      .find({ status: 'active', lastSeen: { $lt: cutoff } })
+      .exec();
+
+    for (const device of devices) {
+      device.status = 'offline';
+      await device.save();
+      await this.createAlert({
+        userId: device.userId,
+        tankId: device.tankId,
+        deviceRef: device._id,
+        deviceId: device.deviceId,
+        type: 'device_offline',
+        severity: 'warning',
+        title: 'Device offline',
+        description: `${device.deviceName} has not reported in over ${OFFLINE_MINUTES} minutes.`,
+      });
+    }
+  }
 
   async createAlert(input: CreateAlertInput): Promise<AlertDocument | null> {
     const recent = await this.alertModel
