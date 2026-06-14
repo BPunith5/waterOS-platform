@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   ChevronLeft,
   MoreHorizontal,
@@ -25,9 +26,11 @@ import { ActionSheet } from '@/components/glass/ActionSheet';
 import { WaterVessel } from '@/components/water/WaterVessel';
 import { MetricOrbCard } from '@/components/water/MetricOrbCard';
 import { HistoryBarChart } from '@/components/water/HistoryBarChart';
-import { api } from '@/lib/api';
+import { api, type DeviceRecord, type DeviceUpdatePayload } from '@/lib/api';
 import { toDisplayTank, generateHistory } from '@/lib/placeholder';
+import { mergeLiveTank } from '@/lib/live';
 import { formatLiters } from '@/lib/format';
+import { useDeviceUpdates, useTankSubscription } from '@/context/SocketContext';
 import { colors, radius, tankTypeMeta } from '@/theme/tokens';
 import { linearGradient } from '@/theme/gradient';
 import type { Tank } from '@/types';
@@ -42,17 +45,70 @@ export function TankDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [tank, setTank] = useState<Tank | null>(null);
+  const [device, setDevice] = useState<DeviceRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const lastWaterLevelRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!id) return;
-    api.tanks
-      .get(id)
-      .then((record) => setTank(toDisplayTank(record)))
-      .catch(() => navigate('/tanks', { replace: true }))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+
+    (async () => {
+      let record;
+      try {
+        record = await api.tanks.get(id);
+      } catch {
+        if (!cancelled) navigate('/tanks', { replace: true });
+        return;
+      }
+      if (cancelled) return;
+
+      let displayTank = toDisplayTank(record);
+      let matchedDevice: DeviceRecord | null = null;
+      let initialWaterLevel: number | null = null;
+
+      try {
+        const devices = await api.devices.list();
+        const match = devices.find((d) => d.tankId === id);
+        if (match) {
+          matchedDevice = match;
+          const logs = await api.telemetry.logs(match.deviceId, 1);
+          if (logs[0]) {
+            initialWaterLevel = logs[0].waterLevel;
+            displayTank = mergeLiveTank(displayTank, match, logs[0]);
+          }
+        }
+      } catch {
+        // live data unavailable; fall back to placeholder readings
+      }
+
+      if (!cancelled) {
+        lastWaterLevelRef.current = initialWaterLevel;
+        setDevice(matchedDevice);
+        setTank(displayTank);
+        setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id, navigate]);
+
+  useTankSubscription(id);
+
+  const handleDeviceUpdate = useCallback(
+    (payload: DeviceUpdatePayload) => {
+      if (!id || payload.device.tankId !== id) return;
+      setTank((prev) => (prev ? mergeLiveTank(prev, payload.device, payload.telemetry, lastWaterLevelRef.current) : prev));
+      lastWaterLevelRef.current = payload.telemetry.waterLevel;
+      setDevice(payload.device);
+    },
+    [id],
+  );
+
+  useDeviceUpdates(handleDeviceUpdate);
 
   if (loading) {
     return (
@@ -130,9 +186,20 @@ export function TankDetailPage() {
               </span>
             </div>
           </div>
-          <p className="mt-3 text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-            {tank.lastUpdated}
-          </p>
+          <div className="mt-3 flex items-center gap-1.5">
+            {device && (
+              <motion.span
+                aria-hidden
+                className="inline-block h-1.5 w-1.5 rounded-full"
+                style={{ backgroundColor: colors.success }}
+                animate={{ opacity: [1, 0.35, 1] }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            )}
+            <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+              {device ? `Live · ${tank.lastUpdated}` : tank.lastUpdated}
+            </p>
+          </div>
         </div>
       </GlassSurface>
 

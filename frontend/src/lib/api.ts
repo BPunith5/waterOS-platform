@@ -35,6 +35,69 @@ export type CreateTankInput = {
   description?: string;
 };
 
+export type DeviceStatus = 'pending' | 'active' | 'offline';
+export type HealthLevel = 'healthy' | 'good' | 'warning' | 'critical';
+
+export type DeviceRecord = {
+  _id: string;
+  deviceId: string;
+  deviceName: string;
+  userId: string;
+  tankId: string | null;
+  status: DeviceStatus;
+  battery: number;
+  signal: number;
+  lastSeen: string | null;
+  activationPin?: string;
+  qrCode?: string;
+  healthScore: number;
+  healthLevel: HealthLevel;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TelemetryRecord = {
+  _id: string;
+  deviceId: string;
+  deviceRef: string;
+  tankId?: string;
+  waterLevel: number;
+  waterQuantity: number;
+  dissolvedOxygen: number;
+  ph: number;
+  turbidity: number;
+  tds: number;
+  temperature: number;
+  lat?: number;
+  lng?: number;
+  speed: number;
+  battery: number;
+  signal: number;
+  timestamp: string;
+};
+
+export type DeviceUpdatePayload = {
+  device: DeviceRecord;
+  telemetry: TelemetryRecord;
+};
+
+export type AlertSeverity = 'info' | 'warning' | 'critical';
+
+export type AlertRecord = {
+  _id: string;
+  userId: string;
+  tankId?: string | null;
+  deviceId: string;
+  type: string;
+  severity: AlertSeverity;
+  title: string;
+  description: string;
+  read: boolean;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+};
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   const headers: Record<string, string> = {
@@ -67,5 +130,11 @@ export const api = {
     update: (id: string, body: Partial<CreateTankInput>) =>
       request<TankRecord>(`/tanks/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
     remove: (id: string) => request<{ success: boolean }>(`/tanks/${id}`, { method: 'DELETE' }),
+  },
+  devices: {
+    list: () => request<DeviceRecord[]>('/devices'),
+  },
+  telemetry: {
+    logs: (deviceId: string, limit = 1) => request<TelemetryRecord[]>(`/logs/${deviceId}?limit=${limit}`),
   },
 };
