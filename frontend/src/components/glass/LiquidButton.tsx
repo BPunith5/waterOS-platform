@@ -89,6 +89,8 @@ export function LiquidButton({
       disabled={disabled}
       className={`${baseClass} ${fullWidth ? 'w-full' : ''} ${disabled ? 'opacity-50' : ''} ${className}`}
       style={style}
+      initial="rest"
+      whileHover={disabled ? undefined : 'hover'}
       whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', damping: 16, stiffness: 320 }}
     >
@@ -105,6 +107,15 @@ export function LiquidButton({
       {variant === 'glass' ? (
         <GlassSurface borderRadius={radius.pill} style={{ position: 'absolute', inset: 0, zIndex: -1 }} />
       ) : null}
+      {!disabled && (
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 left-0 w-1/2 -skew-x-12"
+          style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)' }}
+          variants={{ rest: { x: '-120%', opacity: 0 }, hover: { x: '220%', opacity: 1 } }}
+          transition={{ duration: 0.7, ease: 'easeInOut' }}
+        />
+      )}
       {content}
     </motion.button>
   );

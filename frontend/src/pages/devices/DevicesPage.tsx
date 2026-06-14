@@ -4,6 +4,7 @@ import { Map as MapIcon, Plus } from 'lucide-react';
 import { IconButton } from '@/components/glass/IconButton';
 import { Reveal } from '@/components/glass/Reveal';
 import { GlassSurface } from '@/components/glass/GlassSurface';
+import { Skeleton } from '@/components/glass/Skeleton';
 import { DeviceCard } from '@/components/device/DeviceCard';
 import { api, type DeviceRecord, type TankRecord } from '@/lib/api';
 import { colors } from '@/theme/tokens';
@@ -50,7 +51,7 @@ export function DevicesPage() {
       {loading ? (
         <div className="flex flex-col gap-4">
           {[0, 1, 2].map((i) => (
-            <GlassSurface key={i} className="h-36 animate-pulse" />
+            <Skeleton key={i} className="h-36" />
           ))}
         </div>
       ) : devices.length === 0 ? (

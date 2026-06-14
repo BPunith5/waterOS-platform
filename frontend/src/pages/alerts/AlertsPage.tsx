@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AlertCard } from '@/components/alerts/AlertCard';
 import { FilterPill } from '@/components/glass/FilterPill';
 import { GlassSurface } from '@/components/glass/GlassSurface';
+import { Skeleton } from '@/components/glass/Skeleton';
 import { Reveal } from '@/components/glass/Reveal';
 import { SectionHeader } from '@/components/glass/SectionHeader';
 import { api, type AlertRecord, type AlertSeverity } from '@/lib/api';
@@ -74,7 +75,7 @@ export function AlertsPage() {
       {loading ? (
         <div className="flex flex-col gap-4">
           {[0, 1, 2].map((i) => (
-            <GlassSurface key={i} className="h-20 animate-pulse" />
+            <Skeleton key={i} className="h-20" />
           ))}
         </div>
       ) : filtered.length === 0 ? (

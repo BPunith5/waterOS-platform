@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { IconButton } from '@/components/glass/IconButton';
 import { GlassSurface } from '@/components/glass/GlassSurface';
+import { Skeleton } from '@/components/glass/Skeleton';
 import { StatusPill } from '@/components/glass/StatusPill';
 import { SectionHeader } from '@/components/glass/SectionHeader';
 import { LiquidButton } from '@/components/glass/LiquidButton';
@@ -114,7 +115,7 @@ export function TankDetailPage() {
   if (loading) {
     return (
       <div className="mx-auto w-full max-w-2xl">
-        <GlassSurface className="h-56 animate-pulse" borderRadius={radius.xl} />
+        <Skeleton className="h-56" borderRadius={radius.xl} />
       </div>
     );
   }

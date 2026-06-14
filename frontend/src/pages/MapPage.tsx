@@ -3,6 +3,7 @@ import { MapPin } from 'lucide-react';
 import { DeviceMap, type MapPoint } from '@/components/map/DeviceMap';
 import { FilterPill } from '@/components/glass/FilterPill';
 import { GlassSurface } from '@/components/glass/GlassSurface';
+import { Skeleton } from '@/components/glass/Skeleton';
 import { PressableScale } from '@/components/glass/PressableScale';
 import { colors, gradients, radius, tankTypeMeta } from '@/theme/tokens';
 import { linearGradient } from '@/theme/gradient';
@@ -90,7 +91,7 @@ export function MapPage() {
       )}
 
       {loading ? (
-        <GlassSurface borderRadius={radius.xl} className="h-[420px] animate-pulse" />
+        <Skeleton borderRadius={radius.xl} className="h-[420px]" />
       ) : points.length === 0 ? (
         <GlassSurface borderRadius={radius.xl} className="flex flex-col items-center gap-2 p-10 text-center">
           <MapPin size={28} color={colors.textTertiary} />
@@ -110,7 +111,7 @@ export function MapPage() {
               const isSelected = point.id === selectedId;
               return (
                 <PressableScale key={point.id} onClick={() => setSelectedId(point.id)} scaleTo={0.99} className="w-full">
-                  <GlassSurface borderRadius={radius.lg} bordered={!isSelected} className="flex items-center gap-3 p-3" style={isSelected ? { boxShadow: `0 0 0 1px ${meta.accent}` } : undefined}>
+                  <GlassSurface borderRadius={radius.lg} bordered={!isSelected} interactive className="flex items-center gap-3 p-3" style={isSelected ? { boxShadow: `0 0 0 1px ${meta.accent}` } : undefined}>
                     <span
                       className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-pill"
                       style={{ backgroundImage: linearGradient(meta.gradient) }}

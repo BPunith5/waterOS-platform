@@ -27,7 +27,7 @@ export function TankListCard({ tank, onClick }: Props) {
 
   return (
     <PressableScale onClick={onClick} scaleTo={0.985} className="w-full">
-      <GlassSurface className="p-4">
+      <GlassSurface interactive className="p-4">
         <div className="flex gap-4">
           <WaterVessel width={64} height={132} percentage={tank.currentLevel} color={meta.accent} radius={20} showBubbles={false} />
 

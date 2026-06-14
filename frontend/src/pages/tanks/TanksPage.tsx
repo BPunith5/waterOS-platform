@@ -5,6 +5,7 @@ import { IconButton } from '@/components/glass/IconButton';
 import { FilterPill } from '@/components/glass/FilterPill';
 import { Reveal } from '@/components/glass/Reveal';
 import { GlassSurface } from '@/components/glass/GlassSurface';
+import { Skeleton } from '@/components/glass/Skeleton';
 import { TankListCard } from '@/components/water/TankListCard';
 import { api } from '@/lib/api';
 import { toDisplayTank } from '@/lib/placeholder';
@@ -71,7 +72,7 @@ export function TanksPage() {
       {loading ? (
         <div className="flex flex-col gap-4">
           {[0, 1, 2].map((i) => (
-            <GlassSurface key={i} className="h-36 animate-pulse" />
+            <Skeleton key={i} className="h-36" />
           ))}
         </div>
       ) : filteredTanks.length === 0 ? (

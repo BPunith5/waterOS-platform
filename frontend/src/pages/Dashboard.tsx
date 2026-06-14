@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bell, Cpu, Droplet, Plus } from 'lucide-react';
 import { AlertCard } from '@/components/alerts/AlertCard';
 import { GlassSurface } from '@/components/glass/GlassSurface';
+import { Skeleton } from '@/components/glass/Skeleton';
 import { LiquidButton } from '@/components/glass/LiquidButton';
 import { Reveal } from '@/components/glass/Reveal';
 import { SectionHeader } from '@/components/glass/SectionHeader';
@@ -120,7 +121,7 @@ export function DashboardPage() {
         {loading ? (
           <div className="flex flex-col gap-4">
             {[0, 1].map((i) => (
-              <GlassSurface key={i} className="h-36 animate-pulse" />
+              <Skeleton key={i} className="h-36" />
             ))}
           </div>
         ) : tanks.length === 0 ? (

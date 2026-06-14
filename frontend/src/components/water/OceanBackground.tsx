@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { WaveLayer } from './WaveLayer';
 import { BubbleField } from './BubbleField';
+import { AuroraBlobs } from './AuroraBlobs';
 import { colors, gradients } from '@/theme/tokens';
 import { linearGradient } from '@/theme/gradient';
 
@@ -24,6 +25,7 @@ export function OceanBackground({ children, bubbles = true, waves = true, varian
         className="absolute inset-0"
         style={{ backgroundImage: linearGradient(variant === 'deep' ? gradients.oceanDeep : gradients.oceanSurface, 115) }}
       />
+      <AuroraBlobs />
       {bubbles && <BubbleField count={12} />}
       {waves && (
         <>

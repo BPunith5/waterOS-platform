@@ -17,7 +17,7 @@ export function TankPreviewCard({ tank, onClick, width = 168 }: Props) {
 
   return (
     <PressableScale onClick={onClick}>
-      <GlassSurface className="p-4" style={{ width }}>
+      <GlassSurface interactive className="p-4" style={{ width }}>
         <div className="flex gap-4">
           <WaterVessel width={52} height={104} percentage={tank.currentLevel} color={meta.accent} radius={18} showBubbles={false} />
           <div className="flex min-w-0 flex-1 flex-col gap-1">

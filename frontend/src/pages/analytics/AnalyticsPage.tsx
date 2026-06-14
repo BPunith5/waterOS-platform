@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Activity, Droplet, FlaskConical, Sparkles, Thermometer } from 'lucide-react';
 import { FilterPill } from '@/components/glass/FilterPill';
 import { GlassSurface } from '@/components/glass/GlassSurface';
+import { Skeleton } from '@/components/glass/Skeleton';
 import { SectionHeader } from '@/components/glass/SectionHeader';
 import { HistoryBarChart } from '@/components/water/HistoryBarChart';
 import { MetricOrbCard } from '@/components/water/MetricOrbCard';
@@ -73,7 +74,7 @@ export function AnalyticsPage() {
       {loading || !summary ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {[0, 1, 2, 3].map((i) => (
-            <GlassSurface key={i} className="h-[88px] animate-pulse" />
+            <Skeleton key={i} className="h-[88px]" />
           ))}
         </div>
       ) : (

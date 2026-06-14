@@ -32,7 +32,7 @@ export function DeviceCard({ device, tankName, onClick, onConnect }: Props) {
 
   return (
     <PressableScale onClick={onClick} scaleTo={0.985} className="w-full">
-      <GlassSurface className="p-4">
+      <GlassSurface interactive className="p-4">
         <div className="flex gap-4">
           <LiquidGauge size={64} percentage={device.healthScore / 100} color={healthColor[device.healthLevel]} icon={<Cpu size={18} color={colors.textPrimary} />} />
 

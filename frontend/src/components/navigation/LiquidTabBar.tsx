@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LayoutGrid, Droplet, BarChart3, Bell, User } from 'lucide-react';
+import { LayoutGrid, Droplet, BarChart3, Bell, User, Cpu, Map as MapIcon, Settings } from 'lucide-react';
 import { GlassSurface } from '@/components/glass/GlassSurface';
 import { colors, gradients, radius, shadows } from '@/theme/tokens';
 import { linearGradient } from '@/theme/gradient';
@@ -13,14 +13,30 @@ const TABS = [
   { path: '/profile', icon: User, label: 'Profile' },
 ] as const;
 
+const DESKTOP_TABS = [
+  { path: '/', icon: LayoutGrid, label: 'Dashboard' },
+  { path: '/tanks', icon: Droplet, label: 'Tanks' },
+  { path: '/devices', icon: Cpu, label: 'Devices' },
+  { path: '/map', icon: MapIcon, label: 'Map' },
+  { path: '/analytics', icon: BarChart3, label: 'Analytics' },
+  { path: '/alerts', icon: Bell, label: 'Alerts' },
+  { path: '/profile', icon: User, label: 'Profile' },
+  { path: '/settings', icon: Settings, label: 'Settings' },
+] as const;
+
+function findActiveIndex(tabs: readonly { path: string }[], pathname: string) {
+  return Math.max(
+    0,
+    tabs.findIndex((t) => (t.path === '/' ? pathname === '/' : pathname.startsWith(t.path))),
+  );
+}
+
 export function LiquidTabBar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const activeIndex = Math.max(
-    0,
-    TABS.findIndex((t) => (t.path === '/' ? location.pathname === '/' : location.pathname.startsWith(t.path))),
-  );
+  const activeIndex = findActiveIndex(TABS, location.pathname);
+  const desktopActiveIndex = findActiveIndex(DESKTOP_TABS, location.pathname);
 
   return (
     <>
@@ -80,13 +96,13 @@ export function LiquidTabBar() {
             <motion.div
               className="absolute overflow-hidden"
               style={{ width: 52, height: 52, left: 4, top: 4, borderRadius: radius.lg }}
-              animate={{ y: activeIndex * 60 }}
+              animate={{ y: desktopActiveIndex * 60 }}
               transition={{ type: 'spring', damping: 16, stiffness: 180 }}
             >
               <div className="h-full w-full" style={{ backgroundImage: linearGradient(gradients.aquaGlow) }} />
             </motion.div>
-            {TABS.map((tab, i) => {
-              const isActive = i === activeIndex;
+            {DESKTOP_TABS.map((tab, i) => {
+              const isActive = i === desktopActiveIndex;
               const Icon = tab.icon;
               return (
                 <button

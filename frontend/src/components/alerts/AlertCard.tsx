@@ -23,7 +23,7 @@ export function AlertCard({ alert, onMarkRead }: Props) {
 
   return (
     <PressableScale scaleTo={0.99} className="w-full">
-      <GlassSurface className="p-4" style={{ borderLeft: `3px solid ${meta.color}` }}>
+      <GlassSurface interactive className="p-4" style={{ borderLeft: `3px solid ${meta.color}` }}>
         <div className="flex gap-3">
           <div
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"

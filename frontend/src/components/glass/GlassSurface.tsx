@@ -11,6 +11,8 @@ type GlassSurfaceProps = {
   borderRadius?: number;
   tint?: Tint;
   bordered?: boolean;
+  /** Lifts and brightens the surface on hover — use for clickable cards/rows. */
+  interactive?: boolean;
 };
 
 const overlays: Record<Tint, string> = {
@@ -32,10 +34,11 @@ export function GlassSurface({
   borderRadius = radius.lg,
   tint = 'default',
   bordered = true,
+  interactive = false,
 }: GlassSurfaceProps) {
   return (
     <div
-      className={`relative isolate overflow-hidden ${className}`}
+      className={`relative isolate overflow-hidden ${interactive ? 'glass-interactive' : ''} ${className}`}
       style={{
         borderRadius,
         backdropFilter: `blur(${intensity}px)`,
