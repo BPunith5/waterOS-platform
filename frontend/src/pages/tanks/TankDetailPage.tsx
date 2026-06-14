@@ -16,6 +16,7 @@ import {
   Wrench,
   Pencil,
   Trash2,
+  Cpu,
 } from 'lucide-react';
 import { IconButton } from '@/components/glass/IconButton';
 import { GlassSurface } from '@/components/glass/GlassSurface';
@@ -257,10 +258,19 @@ export function TankDetailPage() {
 
       {/* Actions */}
       <div className="mb-10 flex flex-col gap-3">
+        {!device && (
+          <LiquidButton
+            label="Connect a Device"
+            variant="primary"
+            icon={<Cpu size={18} color={colors.textInverse} />}
+            onClick={() => navigate(`/devices/add?tankId=${id}`)}
+            fullWidth
+          />
+        )}
         <LiquidButton
           label="View Analytics"
-          variant="primary"
-          icon={<BarChart3 size={18} color={colors.textInverse} />}
+          variant={device ? 'primary' : 'ghost'}
+          icon={<BarChart3 size={18} color={device ? colors.textInverse : colors.textPrimary} />}
           onClick={() => navigate('/analytics')}
           fullWidth
         />

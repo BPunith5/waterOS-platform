@@ -49,6 +49,7 @@ export type DeviceRecord = {
   signal: number;
   lastSeen: string | null;
   activationPin?: string;
+  secretKey?: string;
   qrCode?: string;
   healthScore: number;
   healthLevel: HealthLevel;
@@ -79,6 +80,17 @@ export type TelemetryRecord = {
 export type DeviceUpdatePayload = {
   device: DeviceRecord;
   telemetry: TelemetryRecord;
+};
+
+export type CreateDeviceInput = {
+  deviceName: string;
+  tankId?: string;
+};
+
+export type ConnectDeviceInput = {
+  deviceId: string;
+  activationPin: string;
+  tankId: string;
 };
 
 export type AlertSeverity = 'info' | 'warning' | 'critical';
@@ -133,6 +145,8 @@ export const api = {
   },
   devices: {
     list: () => request<DeviceRecord[]>('/devices'),
+    register: (body: CreateDeviceInput) => request<DeviceRecord>('/devices', { method: 'POST', body: JSON.stringify(body) }),
+    connect: (body: ConnectDeviceInput) => request<DeviceRecord>('/devices/connect', { method: 'POST', body: JSON.stringify(body) }),
   },
   telemetry: {
     logs: (deviceId: string, limit = 1) => request<TelemetryRecord[]>(`/logs/${deviceId}?limit=${limit}`),
