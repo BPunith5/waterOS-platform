@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import configuration from './config/configuration';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -25,9 +24,14 @@ import { AnalyticsModule } from './analytics/analytics.module';
     ScheduleModule.forRoot(),
     MongooseModule.forRootAsync({
       useFactory: async () => {
-        const uri =
-          process.env.MONGO_URI ?? (await MongoMemoryServer.create()).getUri();
-        return { uri };
+        if (process.env.MONGO_URI) {
+          return { uri: process.env.MONGO_URI };
+        }
+        // Dev-only fallback: lazily require so this devDependency doesn't
+        // need to be present in production builds where MONGO_URI is set.
+        const { MongoMemoryServer } = await import('mongodb-memory-server');
+        const mongod = await MongoMemoryServer.create();
+        return { uri: mongod.getUri() };
       },
     }),
     UsersModule,
