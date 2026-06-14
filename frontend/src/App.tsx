@@ -13,6 +13,9 @@ import { DevicesPage } from './pages/devices/DevicesPage';
 import { AddDevicePage } from './pages/devices/AddDevicePage';
 import { AnalyticsPage } from './pages/analytics/AnalyticsPage';
 import { AlertsPage } from './pages/alerts/AlertsPage';
+import { ProfilePage } from './pages/profile/ProfilePage';
+import { SettingsPage } from './pages/settings/SettingsPage';
+import { MapPage } from './pages/MapPage';
 import { DevPreviewPage } from './pages/DevPreview';
 
 function App() {
@@ -35,6 +38,9 @@ function App() {
                 <Route path="/devices/add" element={<AddDevicePage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/alerts" element={<AlertsPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/map" element={<MapPage />} />
               </Route>
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

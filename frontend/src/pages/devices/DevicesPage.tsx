@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Map as MapIcon, Plus } from 'lucide-react';
 import { IconButton } from '@/components/glass/IconButton';
 import { Reveal } from '@/components/glass/Reveal';
 import { GlassSurface } from '@/components/glass/GlassSurface';
@@ -41,7 +41,10 @@ export function DevicesPage() {
             {devices.length} device{devices.length === 1 ? '' : 's'} · {activeCount} active
           </p>
         </div>
-        <IconButton icon={Plus} onClick={() => navigate('/devices/add')} />
+        <div className="flex gap-2">
+          <IconButton icon={MapIcon} onClick={() => navigate('/map')} />
+          <IconButton icon={Plus} onClick={() => navigate('/devices/add')} />
+        </div>
       </div>
 
       {loading ? (
