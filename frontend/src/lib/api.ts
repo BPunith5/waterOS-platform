@@ -95,11 +95,14 @@ export type ConnectDeviceInput = {
 
 export type AlertSeverity = 'info' | 'warning' | 'critical';
 
+export type AlertDeviceRef = { _id: string; deviceId: string; deviceName: string };
+export type AlertTankRef = { _id: string; tankName: string };
+
 export type AlertRecord = {
   _id: string;
   userId: string;
-  tankId?: string | null;
-  deviceId: string;
+  tankId?: AlertTankRef | string | null;
+  deviceId: AlertDeviceRef | string;
   type: string;
   severity: AlertSeverity;
   title: string;
@@ -108,6 +111,41 @@ export type AlertRecord = {
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
+};
+
+export type AnalyticsRange = '7D' | '30D' | '90D';
+
+export type AnalyticsSeriesPoint = {
+  date: string;
+  waterLevel: number;
+  dissolvedOxygen: number;
+  ph: number;
+  turbidity: number;
+  temperature: number;
+  battery: number;
+  signal: number;
+  quality: number;
+};
+
+export type AnalyticsSummary = {
+  avgWaterLevel: number | null;
+  avgQuality: number | null;
+  avgTemperature: number | null;
+  avgPh: number | null;
+  deviceUptimePercent: number;
+  sampleCount: number;
+};
+
+export type AnalyticsDistribution = {
+  type: TankType;
+  count: number;
+};
+
+export type AnalyticsResponse = {
+  range: AnalyticsRange;
+  series: AnalyticsSeriesPoint[];
+  summary: AnalyticsSummary;
+  distribution: AnalyticsDistribution[];
 };
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -150,5 +188,14 @@ export const api = {
   },
   telemetry: {
     logs: (deviceId: string, limit = 1) => request<TelemetryRecord[]>(`/logs/${deviceId}?limit=${limit}`),
+  },
+  alerts: {
+    list: (severity?: AlertSeverity) => request<AlertRecord[]>(`/alerts${severity ? `?severity=${severity}` : ''}`),
+    markRead: (id: string, read: boolean) =>
+      request<AlertRecord>(`/alerts/${id}`, { method: 'PATCH', body: JSON.stringify({ read }) }),
+  },
+  analytics: {
+    get: (range: AnalyticsRange = '7D', tankId?: string) =>
+      request<AnalyticsResponse>(`/analytics?range=${range}${tankId ? `&tankId=${tankId}` : ''}`),
   },
 };

@@ -11,6 +11,8 @@ import { TankFormPage } from './pages/tanks/TankFormPage';
 import { TankDetailPage } from './pages/tanks/TankDetailPage';
 import { DevicesPage } from './pages/devices/DevicesPage';
 import { AddDevicePage } from './pages/devices/AddDevicePage';
+import { AnalyticsPage } from './pages/analytics/AnalyticsPage';
+import { AlertsPage } from './pages/alerts/AlertsPage';
 import { DevPreviewPage } from './pages/DevPreview';
 
 function App() {
@@ -31,6 +33,8 @@ function App() {
                 <Route path="/tanks/:id/edit" element={<TankFormPage mode="edit" />} />
                 <Route path="/devices" element={<DevicesPage />} />
                 <Route path="/devices/add" element={<AddDevicePage />} />
+                <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/alerts" element={<AlertsPage />} />
               </Route>
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

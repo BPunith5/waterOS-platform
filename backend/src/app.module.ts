@@ -14,6 +14,7 @@ import { TelemetryModule } from './telemetry/telemetry.module';
 import { AlertsModule } from './alerts/alerts.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { SimulationModule } from './simulation/simulation.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { SimulationModule } from './simulation/simulation.module';
     AlertsModule,
     RealtimeModule,
     SimulationModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

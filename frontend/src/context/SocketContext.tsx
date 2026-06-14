@@ -74,3 +74,18 @@ export function useTankSubscription(tankId?: string | null) {
     };
   }, [socket, connected, tankId]);
 }
+
+/** Joins the `tank:${id}` room for each of the given tank ids while mounted. */
+export function useTanksSubscription(tankIds: string[]) {
+  const { socket, connected } = useSocket();
+  const key = tankIds.join(',');
+
+  useEffect(() => {
+    if (!socket || !connected || !key) return;
+    const ids = key.split(',');
+    ids.forEach((id) => socket.emit('subscribe:tank', id));
+    return () => {
+      ids.forEach((id) => socket.emit('unsubscribe:tank', id));
+    };
+  }, [socket, connected, key]);
+}
