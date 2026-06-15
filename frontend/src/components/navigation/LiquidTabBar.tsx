@@ -41,6 +41,7 @@ export function LiquidTabBar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarHovered, setSidebarHovered] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const activeIndex = findActiveIndex(TABS, location.pathname);
   const desktopActiveIndex = findActiveIndex(DESKTOP_TABS, location.pathname);
@@ -118,6 +119,19 @@ export function LiquidTabBar() {
             >
               <div className="h-full w-full" style={{ backgroundImage: linearGradient(gradients.aquaGlow) }} />
             </motion.div>
+            <AnimatePresence>
+              {hoveredIndex !== null && hoveredIndex !== desktopActiveIndex && (
+                <motion.div
+                  key="hover-highlight"
+                  className="absolute overflow-hidden"
+                  style={{ height: PILL_SIZE, left: 4, top: 4, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.08)' }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1, y: hoveredIndex * ROW_HEIGHT, width: sidebarHovered ? SIDEBAR_EXPANDED - 8 : PILL_SIZE }}
+                  exit={{ opacity: 0 }}
+                  transition={{ type: 'spring', damping: 24, stiffness: 280 }}
+                />
+              )}
+            </AnimatePresence>
             {DESKTOP_TABS.map((tab, i) => {
               const isActive = i === desktopActiveIndex;
               const Icon = tab.icon;
@@ -126,6 +140,8 @@ export function LiquidTabBar() {
                   key={tab.path}
                   type="button"
                   onClick={() => !isActive && navigate(tab.path)}
+                  onMouseEnter={() => setHoveredIndex(i)}
+                  onMouseLeave={() => setHoveredIndex((cur) => (cur === i ? null : cur))}
                   className="relative z-10 flex items-center overflow-hidden"
                   style={{ height: ROW_HEIGHT, width: '100%', paddingLeft: 19 }}
                 >
