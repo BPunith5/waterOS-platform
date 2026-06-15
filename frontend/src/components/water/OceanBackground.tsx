@@ -45,7 +45,7 @@ export function OceanBackground({ children, bubbles = true, waves = true, varian
         className="absolute inset-x-0 bottom-0"
         style={{
           height: waterHeight,
-          backgroundImage: `linear-gradient(to bottom, rgba(34, 211, 238, 0.16), ${colors.oceanBlue} 18%, ${colors.abyss} 100%)`,
+          backgroundImage: `linear-gradient(to bottom, transparent, rgba(34, 211, 238, 0.12) 10%, ${colors.oceanBlue} 28%, ${colors.abyss} 100%)`,
         }}
       />
       {waves && (

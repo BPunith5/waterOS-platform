@@ -41,8 +41,9 @@ function Bubble({
         width: size,
         height: size,
         left,
-        border: '1px solid rgba(255,255,255,0.25)',
-        backgroundImage: 'linear-gradient(160deg, rgba(255,255,255,0.55), rgba(255,255,255,0.05))',
+        border: '1px solid rgba(255,255,255,0.4)',
+        backgroundImage: 'linear-gradient(160deg, rgba(255,255,255,0.7), rgba(255,255,255,0.08))',
+        boxShadow: '0 0 12px rgba(125,240,255,0.25)',
       }}
       initial={{ y: startY, x: 0, opacity: 0 }}
       animate={{
@@ -89,11 +90,11 @@ export function BubbleField({ count = 14, seedOffset = 0, origin = 'top', waterH
       const r4 = seeded(i + 151 + seedOffset);
       const r5 = seeded(i + 201 + seedOffset);
       return {
-        size: 6 + r1 * 26,
-        left: r2 * (viewport.width - 30),
+        size: 12 + r1 * 46,
+        left: r2 * (viewport.width - 50),
         duration: 9000 + r3 * 9000,
         delay: r4 * 9000,
-        opacity: 0.15 + r1 * 0.35,
+        opacity: 0.3 + r1 * 0.45,
         startFrac: r5,
       };
     });
