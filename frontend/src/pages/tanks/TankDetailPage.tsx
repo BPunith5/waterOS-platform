@@ -19,6 +19,7 @@ import {
   Cpu,
 } from 'lucide-react';
 import { IconButton } from '@/components/glass/IconButton';
+import { Reveal } from '@/components/glass/Reveal';
 import { GlassSurface } from '@/components/glass/GlassSurface';
 import { Skeleton } from '@/components/glass/Skeleton';
 import { StatusPill } from '@/components/glass/StatusPill';
@@ -152,64 +153,71 @@ export function TankDetailPage() {
         <IconButton icon={MoreHorizontal} onClick={() => setMenuOpen(true)} />
       </div>
 
-      {/* Hero */}
-      <GlassSurface borderRadius={radius.xl} className="mb-8 flex items-center gap-6 p-5">
-        <WaterVessel width={120} height={232} percentage={tank.currentLevel} color={meta.accent} radius={32} />
-        <div className="min-w-0 flex-1">
-          <span
-            className="relative mb-2 inline-flex items-center gap-1 overflow-hidden rounded-pill px-2.5 py-[5px]"
-            style={{ backgroundImage: linearGradient(meta.gradient) }}
-          >
-            <TypeIcon size={12} color={colors.textInverse} />
-            <span className="text-[10px] font-bold tracking-wide" style={{ fontFamily: 'var(--font-body)', color: colors.textInverse }}>
-              {meta.label}
-            </span>
-          </span>
-
-          <p className="text-4xl font-bold leading-tight" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
-            {Math.round(tank.currentLevel * 100)}%
-          </p>
-          <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-            Current Level
-          </p>
-
-          <div className="my-3 h-px" style={{ backgroundColor: colors.glassBorder }} />
-
-          <p className="text-base font-medium" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
-            {formatLiters(tank.capacityLiters * tank.currentLevel)}
-          </p>
-          <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-            of {formatLiters(tank.capacityLiters)} capacity
-          </p>
-
-          <div className="mt-4 flex items-center justify-between">
-            <StatusPill status={tank.status} />
-            <div className="flex items-center gap-1">
-              <TrendIcon size={14} color={trend.color} />
-              <span className="text-xs font-semibold" style={{ color: trend.color, fontFamily: 'var(--font-body)' }}>
-                {trend.label}
+      {/* Hero — pops up and expands horizontally into view */}
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: 18, width: '72%' }}
+        animate={{ opacity: 1, y: 0, width: '100%' }}
+        transition={{ type: 'spring', damping: 22, stiffness: 190 }}
+      >
+        <GlassSurface borderRadius={radius.xl} className="flex items-center gap-6 p-5">
+          <WaterVessel width={120} height={232} percentage={tank.currentLevel} color={meta.accent} radius={32} />
+          <div className="min-w-0 flex-1">
+            <span
+              className="relative mb-2 inline-flex items-center gap-1 overflow-hidden rounded-pill px-2.5 py-[5px]"
+              style={{ backgroundImage: linearGradient(meta.gradient) }}
+            >
+              <TypeIcon size={12} color={colors.textInverse} />
+              <span className="text-[10px] font-bold tracking-wide" style={{ fontFamily: 'var(--font-body)', color: colors.textInverse }}>
+                {meta.label}
               </span>
+            </span>
+
+            <p className="text-4xl font-bold leading-tight" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
+              {Math.round(tank.currentLevel * 100)}%
+            </p>
+            <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+              Current Level
+            </p>
+
+            <div className="my-3 h-px" style={{ backgroundColor: colors.glassBorder }} />
+
+            <p className="text-base font-medium" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
+              {formatLiters(tank.capacityLiters * tank.currentLevel)}
+            </p>
+            <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+              of {formatLiters(tank.capacityLiters)} capacity
+            </p>
+
+            <div className="mt-4 flex items-center justify-between">
+              <StatusPill status={tank.status} />
+              <div className="flex items-center gap-1">
+                <TrendIcon size={14} color={trend.color} />
+                <span className="text-xs font-semibold" style={{ color: trend.color, fontFamily: 'var(--font-body)' }}>
+                  {trend.label}
+                </span>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-1.5">
+              {device && (
+                <motion.span
+                  aria-hidden
+                  className="inline-block h-1.5 w-1.5 rounded-full"
+                  style={{ backgroundColor: colors.success }}
+                  animate={{ opacity: [1, 0.35, 1] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                />
+              )}
+              <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+                {device ? `Live · ${tank.lastUpdated}` : tank.lastUpdated}
+              </p>
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-1.5">
-            {device && (
-              <motion.span
-                aria-hidden
-                className="inline-block h-1.5 w-1.5 rounded-full"
-                style={{ backgroundColor: colors.success }}
-                animate={{ opacity: [1, 0.35, 1] }}
-                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-              />
-            )}
-            <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-              {device ? `Live · ${tank.lastUpdated}` : tank.lastUpdated}
-            </p>
-          </div>
-        </div>
-      </GlassSurface>
+        </GlassSurface>
+      </motion.div>
 
       {/* Live readings */}
-      <div className="mb-8">
+      <Reveal index={1} className="mb-8">
         <SectionHeader title="Live Readings" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <MetricOrbCard
@@ -252,16 +260,16 @@ export function TankDetailPage() {
             color={colors.aqua}
           />
         </div>
-      </div>
+      </Reveal>
 
       {/* History */}
-      <div className="mb-8">
+      <Reveal index={2} className="mb-8">
         <SectionHeader title="7-Day Level Trend" />
         <HistoryBarChart data={levelHistory} color={meta.accent} />
-      </div>
+      </Reveal>
 
       {/* Actions */}
-      <div className="mb-10 flex flex-col gap-3">
+      <Reveal index={3} className="mb-10 flex flex-col gap-3">
         {!device && (
           <LiquidButton
             label="Connect a Device"
@@ -285,7 +293,7 @@ export function TankDetailPage() {
           onClick={() => {}}
           fullWidth
         />
-      </div>
+      </Reveal>
 
       <ActionSheet
         open={menuOpen}
