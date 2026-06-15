@@ -59,6 +59,7 @@ const previewTanks: Tank[] = [
     status: 'optimal',
     lastUpdated: '2 min ago',
     trend: 'stable',
+    connected: true,
   },
   {
     id: 'tank-005',
@@ -75,6 +76,7 @@ const previewTanks: Tank[] = [
     status: 'critical',
     lastUpdated: 'Just now',
     trend: 'falling',
+    connected: true,
   },
   {
     id: 'tank-002',
@@ -91,6 +93,7 @@ const previewTanks: Tank[] = [
     status: 'optimal',
     lastUpdated: '5 min ago',
     trend: 'rising',
+    connected: true,
   },
 ];
 

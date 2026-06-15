@@ -62,7 +62,7 @@ export function TankFormPage({ mode }: Props) {
         <h1 className="text-2xl font-bold" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
           {createdTank ? 'Tank Created' : mode === 'create' ? 'Add New Tank' : 'Edit Tank'}
         </h1>
-        <IconButton icon={X} onClick={() => navigate(createdTank ? `/tanks/${createdTank.id}` : -1)} />
+        <IconButton icon={X} onClick={() => (createdTank ? navigate(`/tanks/${createdTank.id}`) : navigate(-1))} />
       </div>
 
       {error && (
