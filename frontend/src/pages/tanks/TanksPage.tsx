@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/glass/Skeleton';
 import { TankListCard } from '@/components/water/TankListCard';
 import { api } from '@/lib/api';
 import { toDisplayTank } from '@/lib/placeholder';
+import { mergeLiveTank } from '@/lib/live';
 import { colors, gradients, tankTypeMeta } from '@/theme/tokens';
 import type { Tank, TankType } from '@/types';
 
@@ -34,10 +35,34 @@ export function TanksPage() {
 
   function refresh() {
     setLoading(true);
-    api.tanks
-      .list()
-      .then((records) => setTanks(records.map(toDisplayTank)))
-      .finally(() => setLoading(false));
+    (async () => {
+      try {
+        const records = await api.tanks.list();
+        let displayTanks = records.map(toDisplayTank);
+
+        try {
+          const devices = await api.devices.list();
+          displayTanks = await Promise.all(
+            displayTanks.map(async (tank, i) => {
+              const device = devices.find((d) => d.tankId === records[i]._id);
+              if (!device) return tank;
+              try {
+                const logs = await api.telemetry.logs(device.deviceId, 1);
+                return logs[0] ? mergeLiveTank(tank, device, logs[0]) : tank;
+              } catch {
+                return tank;
+              }
+            }),
+          );
+        } catch {
+          // live data unavailable; fall back to placeholder readings
+        }
+
+        setTanks(displayTanks);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }
 
   const filteredTanks = filter === 'all' ? tanks : tanks.filter((t) => t.type === filter);
