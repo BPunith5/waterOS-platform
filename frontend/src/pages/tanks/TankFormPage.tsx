@@ -42,6 +42,16 @@ export function TankFormPage({ mode }: Props) {
     try {
       if (mode === 'create') {
         const tank = await api.tanks.create(values);
+        try {
+          const device = await api.devices.register({ deviceName: `${tank.tankName} Sensor` });
+          await api.devices.connect({
+            deviceId: device.deviceId,
+            activationPin: device.activationPin ?? '',
+            tankId: tank._id,
+          });
+        } catch {
+          // live sensor provisioning is best-effort; tank still works with placeholder data
+        }
         navigate(`/tanks/${tank._id}`, { replace: true });
       } else if (id) {
         await api.tanks.update(id, values);
