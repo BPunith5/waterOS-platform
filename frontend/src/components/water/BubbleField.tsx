@@ -16,9 +16,18 @@ type BubbleSpec = {
   opacity: number;
 };
 
-function Bubble({ size, left, duration, delay, opacity, screenHeight }: BubbleSpec & { screenHeight: number }) {
+function Bubble({
+  size,
+  left,
+  duration,
+  delay,
+  opacity,
+  screenHeight,
+  origin,
+}: BubbleSpec & { screenHeight: number; origin: 'top' | 'bottom' }) {
   const seconds = duration / 1000;
   const delaySeconds = delay / 1000;
+  const startY = origin === 'bottom' ? screenHeight + size * 2 : screenHeight * 0.15;
 
   return (
     <motion.div
@@ -30,7 +39,7 @@ function Bubble({ size, left, duration, delay, opacity, screenHeight }: BubbleSp
         border: '1px solid rgba(255,255,255,0.25)',
         backgroundImage: 'linear-gradient(160deg, rgba(255,255,255,0.55), rgba(255,255,255,0.05))',
       }}
-      initial={{ y: screenHeight * 0.15, x: 0, opacity: 0 }}
+      initial={{ y: startY, x: 0, opacity: 0 }}
       animate={{
         y: -size * 2,
         x: [0, 14, 0, -14, 0],
@@ -48,10 +57,12 @@ function Bubble({ size, left, duration, delay, opacity, screenHeight }: BubbleSp
 type BubbleFieldProps = {
   count?: number;
   seedOffset?: number;
+  /** Where bubbles spawn from: 'bottom' rises from the bottom edge for a "filling" feel. */
+  origin?: 'top' | 'bottom';
 };
 
 /** A field of slowly rising, glassy bubbles for ambient depth. */
-export function BubbleField({ count = 14, seedOffset = 0 }: BubbleFieldProps) {
+export function BubbleField({ count = 14, seedOffset = 0, origin = 'top' }: BubbleFieldProps) {
   const [viewport, setViewport] = useState(() => ({
     width: typeof window !== 'undefined' ? window.innerWidth : 1024,
     height: typeof window !== 'undefined' ? window.innerHeight : 768,
@@ -82,7 +93,7 @@ export function BubbleField({ count = 14, seedOffset = 0 }: BubbleFieldProps) {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       {bubbles.map((b, i) => (
-        <Bubble key={i} {...b} screenHeight={viewport.height} />
+        <Bubble key={i} {...b} screenHeight={viewport.height} origin={origin} />
       ))}
     </div>
   );

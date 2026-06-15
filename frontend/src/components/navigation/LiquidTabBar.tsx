@@ -32,10 +32,15 @@ function findActiveIndex(tabs: readonly { path: string }[], pathname: string) {
   );
 }
 
+const SIDEBAR_COLLAPSED = 60;
+const SIDEBAR_EXPANDED = 196;
+const ROW_HEIGHT = 60;
+const PILL_SIZE = 52;
+
 export function LiquidTabBar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [sidebarHovered, setSidebarHovered] = useState(false);
 
   const activeIndex = findActiveIndex(TABS, location.pathname);
   const desktopActiveIndex = findActiveIndex(DESKTOP_TABS, location.pathname);
@@ -86,20 +91,30 @@ export function LiquidTabBar() {
         </GlassSurface>
       </div>
 
-      {/* Desktop: fixed left sidebar */}
-      <div className="fixed left-4 top-1/2 z-40 hidden -translate-y-1/2 md:flex">
+      {/* Desktop: fixed left sidebar, expands on hover to reveal labels */}
+      <div
+        className="fixed left-4 top-1/2 z-40 hidden -translate-y-1/2 md:flex"
+        onMouseEnter={() => setSidebarHovered(true)}
+        onMouseLeave={() => setSidebarHovered(false)}
+      >
         <GlassSurface
           borderRadius={radius.xl}
           intensity={50}
           className="flex flex-col p-1.5"
-          style={{ boxShadow: shadows.glow(colors.cyan, 0.25), overflow: 'visible' }}
+          style={{ boxShadow: shadows.glow(colors.cyan, 0.25) }}
         >
-          <div className="relative flex flex-col">
+          <motion.div
+            className="relative flex flex-col"
+            initial={false}
+            animate={{ width: sidebarHovered ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED }}
+            transition={{ type: 'spring', damping: 22, stiffness: 240 }}
+          >
             <motion.div
               className="absolute overflow-hidden"
-              style={{ width: 52, height: 52, left: 4, top: 4, borderRadius: radius.lg }}
-              animate={{ y: desktopActiveIndex * 60 }}
-              transition={{ type: 'spring', damping: 16, stiffness: 180 }}
+              style={{ height: PILL_SIZE, left: 4, top: 4, borderRadius: radius.lg }}
+              initial={false}
+              animate={{ y: desktopActiveIndex * ROW_HEIGHT, width: sidebarHovered ? SIDEBAR_EXPANDED - 8 : PILL_SIZE }}
+              transition={{ type: 'spring', damping: 18, stiffness: 200 }}
             >
               <div className="h-full w-full" style={{ backgroundImage: linearGradient(gradients.aquaGlow) }} />
             </motion.div>
@@ -111,39 +126,28 @@ export function LiquidTabBar() {
                   key={tab.path}
                   type="button"
                   onClick={() => !isActive && navigate(tab.path)}
-                  onMouseEnter={() => setHoveredIndex(i)}
-                  onMouseLeave={() => setHoveredIndex((cur) => (cur === i ? null : cur))}
-                  onFocus={() => setHoveredIndex(i)}
-                  onBlur={() => setHoveredIndex((cur) => (cur === i ? null : cur))}
-                  className="relative z-10 flex items-center justify-center rounded-2xl transition-colors duration-200 hover:bg-white/10"
-                  style={{ width: 60, height: 60 }}
+                  className="relative z-10 flex items-center overflow-hidden"
+                  style={{ height: ROW_HEIGHT, width: '100%', paddingLeft: 19 }}
                 >
-                  <motion.div animate={{ scale: hoveredIndex === i ? 1.15 : 1 }} transition={{ type: 'spring', damping: 14, stiffness: 260 }}>
-                    <Icon size={22} color={isActive ? colors.textInverse : colors.textSecondary} />
-                  </motion.div>
-
-                  <div className="pointer-events-none absolute left-full top-1/2 z-20 ml-3 -translate-y-1/2">
-                    <AnimatePresence>
-                      {hoveredIndex === i && (
-                        <motion.div
-                          initial={{ opacity: 0, x: -8, scale: 0.92 }}
-                          animate={{ opacity: 1, x: 0, scale: 1 }}
-                          exit={{ opacity: 0, x: -8, scale: 0.92 }}
-                          transition={{ duration: 0.16, ease: 'easeOut' }}
-                        >
-                          <GlassSurface borderRadius={radius.md} tint="bright" className="px-3 py-1.5" style={{ boxShadow: shadows.glow(colors.cyan, 0.2) }}>
-                            <span className="whitespace-nowrap text-sm font-semibold" style={{ color: colors.textPrimary, fontFamily: 'var(--font-body)' }}>
-                              {tab.label}
-                            </span>
-                          </GlassSurface>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                  <Icon size={22} color={isActive ? colors.textInverse : colors.textSecondary} style={{ flexShrink: 0 }} />
+                  <AnimatePresence>
+                    {sidebarHovered && (
+                      <motion.span
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -6 }}
+                        transition={{ duration: 0.16, ease: 'easeOut' }}
+                        className="ml-3 whitespace-nowrap text-sm font-semibold"
+                        style={{ color: isActive ? colors.textInverse : colors.textSecondary, fontFamily: 'var(--font-body)' }}
+                      >
+                        {tab.label}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </button>
               );
             })}
-          </div>
+          </motion.div>
         </GlassSurface>
       </div>
     </>
