@@ -13,6 +13,7 @@ import { colors, gradients, radius } from '@/theme/tokens';
 
 type Step = 'register' | 'connect';
 type ConnectTab = 'manual' | 'scan';
+type RegisterMode = 'create' | 'scan';
 
 export function AddDevicePage() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export function AddDevicePage() {
 
   const [step, setStep] = useState<Step>(params.get('step') === 'connect' ? 'connect' : 'register');
   const [connectTab, setConnectTab] = useState<ConnectTab>('manual');
+  const [registerMode, setRegisterMode] = useState<RegisterMode>('create');
 
   const [deviceName, setDeviceName] = useState('');
   const [registered, setRegistered] = useState<DeviceRecord | null>(null);
@@ -80,9 +82,10 @@ export function AddDevicePage() {
 
   function handleScan(decoded: string) {
     const [scannedId, scannedPin] = decoded.split(':');
-    if (scannedId) setDeviceId(scannedId.trim());
+    if (scannedId) setDeviceId(scannedId.trim().toUpperCase());
     if (scannedPin) setActivationPin(scannedPin.trim());
     setConnectTab('manual');
+    setStep('connect');
   }
 
   async function copyValue(label: string, value: string) {
@@ -111,26 +114,47 @@ export function AddDevicePage() {
       )}
 
       {step === 'register' && !registered && (
-        <form onSubmit={handleRegister}>
-          <GlassSurface borderRadius={radius.xl} className="mb-6 p-5">
-            <p className="mb-1 text-sm font-semibold" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
-              Register a sensor
-            </p>
-            <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-              Give your device a name. You'll get a unique ID, PIN and QR code to connect it to a tank.
-            </p>
-          </GlassSurface>
+        <>
+          <div className="mb-4 flex gap-2">
+            <FilterPill label="Provision New" active={registerMode === 'create'} onClick={() => setRegisterMode('create')} gradient={gradients.aquaGlow} />
+            <FilterPill label="Scan QR Code" active={registerMode === 'scan'} onClick={() => setRegisterMode('scan')} gradient={gradients.aquaGlow} />
+          </div>
 
-          <GlassInput
-            label="Device Name"
-            placeholder="e.g. Rooftop Tank Sensor"
-            value={deviceName}
-            onChange={(e) => setDeviceName(e.target.value)}
-            required
-          />
+          {registerMode === 'create' ? (
+            <form onSubmit={handleRegister}>
+              <GlassSurface borderRadius={radius.xl} className="mb-6 p-5">
+                <p className="mb-1 text-sm font-semibold" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
+                  Provision a new sensor
+                </p>
+                <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+                  Give your device a name. You'll get a unique ID, PIN and QR code to connect it to a tank.
+                </p>
+              </GlassSurface>
 
-          <LiquidButton label={registering ? 'Registering…' : 'Register Device'} type="submit" variant="primary" fullWidth disabled={registering || !deviceName.trim()} />
-        </form>
+              <GlassInput
+                label="Device Name"
+                placeholder="e.g. Rooftop Tank Sensor"
+                value={deviceName}
+                onChange={(e) => setDeviceName(e.target.value)}
+                required
+              />
+
+              <LiquidButton label={registering ? 'Registering…' : 'Register Device'} type="submit" variant="primary" fullWidth disabled={registering || !deviceName.trim()} />
+            </form>
+          ) : (
+            <div className="mb-4">
+              <GlassSurface borderRadius={radius.xl} className="mb-4 p-5">
+                <p className="mb-1 text-sm font-semibold" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
+                  Scan a device's QR code
+                </p>
+                <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+                  Already have a sensor with a printed QR label? Scan it to fill in its ID and PIN, then connect it to a tank.
+                </p>
+              </GlassSurface>
+              <QrScanner onScan={handleScan} onError={(message) => setError(message)} />
+            </div>
+          )}
+        </>
       )}
 
       {step === 'register' && registered && (
