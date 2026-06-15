@@ -33,8 +33,8 @@ export function OceanBackground({ children, bubbles = true, waves = true, varian
   // While a tank is open, the water line rises and falls to reflect
   // that tank's current fill level. Waves ride along its surface and
   // bubbles rise up out of it.
-  const MIN_WATER_FRAC = 0.28;
-  const MAX_WATER_FRAC = 0.78;
+  const MIN_WATER_FRAC = 0.04;
+  const MAX_WATER_FRAC = 1;
   const waterFrac =
     waterLevel != null ? MIN_WATER_FRAC + (MAX_WATER_FRAC - MIN_WATER_FRAC) * Math.min(1, Math.max(0, waterLevel)) : 0.5;
   const waterHeight = viewportHeight * waterFrac;
