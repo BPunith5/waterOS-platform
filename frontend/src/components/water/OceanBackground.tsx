@@ -26,7 +26,12 @@ export function OceanBackground({ children, bubbles = true, waves = true, varian
         style={{ backgroundImage: linearGradient(variant === 'deep' ? gradients.oceanDeep : gradients.oceanSurface, 115) }}
       />
       <AuroraBlobs />
-      {bubbles && <BubbleField count={12} />}
+      {bubbles && (
+        <>
+          <BubbleField count={18} />
+          <BubbleField count={16} seedOffset={777} />
+        </>
+      )}
       {waves && (
         <>
           <WaveLayer color={colors.oceanBlue} opacity={0.55} amplitude={22} baseline={0.55} duration={16000} height={260} bottom={-60} />
