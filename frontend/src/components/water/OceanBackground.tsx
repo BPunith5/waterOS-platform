@@ -21,7 +21,7 @@ type OceanBackgroundProps = {
  */
 export function OceanBackground({ children, bubbles = true, waves = true, variant = 'deep' }: OceanBackgroundProps) {
   const [viewportHeight, setViewportHeight] = useState(() => (typeof window !== 'undefined' ? window.innerHeight : 800));
-  const { tankType } = useOceanTheme();
+  const { tankType, waterLevel } = useOceanTheme();
 
   useEffect(() => {
     const onResize = () => setViewportHeight(window.innerHeight);
@@ -29,9 +29,15 @@ export function OceanBackground({ children, bubbles = true, waves = true, varian
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // The body of water fills the bottom half of the page; waves ride
-  // along its surface and bubbles rise up out of it.
-  const waterHeight = viewportHeight * 0.5;
+  // The body of water fills the bottom half of the page by default.
+  // While a tank is open, the water line rises and falls to reflect
+  // that tank's current fill level. Waves ride along its surface and
+  // bubbles rise up out of it.
+  const MIN_WATER_FRAC = 0.28;
+  const MAX_WATER_FRAC = 0.78;
+  const waterFrac =
+    waterLevel != null ? MIN_WATER_FRAC + (MAX_WATER_FRAC - MIN_WATER_FRAC) * Math.min(1, Math.max(0, waterLevel)) : 0.5;
+  const waterHeight = viewportHeight * waterFrac;
   const waveBottom = (height: number, baseline: number) => waterHeight - height * baseline;
 
   // When a tank is open, retint the waves and water body toward that
@@ -62,12 +68,13 @@ export function OceanBackground({ children, bubbles = true, waves = true, varian
         )}
       </AnimatePresence>
       <AuroraBlobs />
-      {/* Body of water filling the bottom half of the page */}
+      {/* Body of water — its height rises and falls with the open tank's level */}
       <div
         aria-hidden
         className="absolute inset-x-0 bottom-0"
         style={{
           height: waterHeight,
+          transition: 'height 1.1s ease',
           backgroundImage: `linear-gradient(to bottom, transparent, rgba(34, 211, 238, 0.12) 10%, ${tint(colors.oceanBlue)} 28%, ${tint(colors.abyss)} 100%)`,
         }}
       />

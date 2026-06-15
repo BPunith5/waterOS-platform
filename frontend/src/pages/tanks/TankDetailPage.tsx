@@ -114,7 +114,7 @@ export function TankDetailPage() {
 
   useDeviceUpdates(handleDeviceUpdate);
 
-  useOceanAccent(tank?.type ?? null);
+  useOceanAccent(tank?.type ?? null, tank?.currentLevel ?? null);
 
   if (loading) {
     return (

@@ -47,7 +47,7 @@ export function WaveLayer({
     <motion.div
       aria-hidden
       className="pointer-events-none absolute left-0"
-      style={{ bottom, height, width: W * 2 }}
+      style={{ bottom, height, width: W * 2, transition: 'bottom 1.1s ease, height 1.1s ease' }}
       animate={{ x: reverse ? [-W, 0] : [0, -W] }}
       transition={{ duration: duration / 1000, ease: 'linear', repeat: Infinity }}
     >
