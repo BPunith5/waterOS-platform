@@ -45,5 +45,6 @@ export function mergeLiveTank(
     status,
     trend,
     lastUpdated: formatRelativeTime(telemetry.timestamp),
+    connected: true,
   };
 }

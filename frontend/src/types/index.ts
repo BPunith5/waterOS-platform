@@ -17,6 +17,7 @@ export type Tank = {
   status: TankStatus;
   lastUpdated: string;
   trend: 'rising' | 'falling' | 'stable';
+  connected: boolean;
 };
 
 export type AlertSeverity = 'info' | 'warning' | 'critical';

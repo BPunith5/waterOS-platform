@@ -1,4 +1,4 @@
-import { FlaskConical, Leaf, MapPin, Minus, Thermometer, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react';
+import { Cpu, FlaskConical, Leaf, MapPin, Minus, Thermometer, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react';
 import { GlassSurface } from '@/components/glass/GlassSurface';
 import { PressableScale } from '@/components/glass/PressableScale';
 import { StatusPill } from '@/components/glass/StatusPill';
@@ -55,27 +55,38 @@ export function TankListCard({ tank, onClick }: Props) {
               </span>
             </div>
 
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-heading)', color: meta.accent }}>
-                {Math.round(tank.currentLevel * 100)}%
-              </span>
-              <span className="text-xs" style={{ fontFamily: 'var(--font-body)', color: colors.textTertiary }}>
-                of {formatLiters(tank.capacityLiters)}
-              </span>
-            </div>
+            {tank.connected ? (
+              <>
+                <div className="mt-1 flex items-baseline gap-1.5">
+                  <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-heading)', color: meta.accent }}>
+                    {Math.round(tank.currentLevel * 100)}%
+                  </span>
+                  <span className="text-xs" style={{ fontFamily: 'var(--font-body)', color: colors.textTertiary }}>
+                    of {formatLiters(tank.capacityLiters)}
+                  </span>
+                </div>
 
-            <div className="mt-1.5 flex gap-2">
-              <StatChip icon={Thermometer} value={`${tank.temperature.toFixed(1)}°`} />
-              <StatChip icon={FlaskConical} value={tank.ph.toFixed(1)} />
-              <StatChip icon={Leaf} value={`${Math.round(tank.dissolvedOxygen * 100)}%`} />
-            </div>
+                <div className="mt-1.5 flex gap-2">
+                  <StatChip icon={Thermometer} value={`${tank.temperature.toFixed(1)}°`} />
+                  <StatChip icon={FlaskConical} value={tank.ph.toFixed(1)} />
+                  <StatChip icon={Leaf} value={`${Math.round(tank.dissolvedOxygen * 100)}%`} />
+                </div>
 
-            <div className="mt-2 flex items-center justify-between">
-              <StatusPill status={tank.status} />
-              <span className="text-xs" style={{ fontFamily: 'var(--font-body)', color: colors.textTertiary }}>
-                {tank.lastUpdated}
-              </span>
-            </div>
+                <div className="mt-2 flex items-center justify-between">
+                  <StatusPill status={tank.status} />
+                  <span className="text-xs" style={{ fontFamily: 'var(--font-body)', color: colors.textTertiary }}>
+                    {tank.lastUpdated}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <Cpu size={14} color={colors.textTertiary} />
+                <span className="text-xs" style={{ fontFamily: 'var(--font-body)', color: colors.textTertiary }}>
+                  No sensor connected · of {formatLiters(tank.capacityLiters)}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </GlassSurface>
