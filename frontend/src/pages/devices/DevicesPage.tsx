@@ -6,6 +6,7 @@ import { Reveal } from '@/components/glass/Reveal';
 import { GlassSurface } from '@/components/glass/GlassSurface';
 import { Skeleton } from '@/components/glass/Skeleton';
 import { DeviceCard } from '@/components/device/DeviceCard';
+import { DeviceDetailsModal } from '@/components/device/DeviceDetailsModal';
 import { api, type DeviceRecord, type TankRecord } from '@/lib/api';
 import { colors } from '@/theme/tokens';
 
@@ -14,6 +15,7 @@ export function DevicesPage() {
   const [devices, setDevices] = useState<DeviceRecord[]>([]);
   const [tanks, setTanks] = useState<TankRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detailsDevice, setDetailsDevice] = useState<DeviceRecord | null>(null);
 
   useEffect(() => {
     Promise.all([api.devices.list(), api.tanks.list()])
@@ -76,11 +78,14 @@ export function DevicesPage() {
                 onConnect={() =>
                   navigate(`/devices/add?step=connect&deviceId=${device.deviceId}&pin=${device.activationPin ?? ''}`)
                 }
+                onShowDetails={() => setDetailsDevice(device)}
               />
             </Reveal>
           ))}
         </div>
       )}
+
+      <DeviceDetailsModal device={detailsDevice} tankName={tankName(detailsDevice?.tankId ?? null)} onClose={() => setDetailsDevice(null)} />
     </div>
   );
 }

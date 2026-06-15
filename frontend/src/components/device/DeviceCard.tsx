@@ -1,4 +1,4 @@
-import { Cpu, Link2, Wifi, Battery } from 'lucide-react';
+import { Cpu, Link2, Wifi, Battery, QrCode } from 'lucide-react';
 import { GlassSurface } from '@/components/glass/GlassSurface';
 import { PressableScale } from '@/components/glass/PressableScale';
 import { LiquidGauge } from '@/components/water/LiquidGauge';
@@ -25,9 +25,10 @@ type Props = {
   tankName?: string | null;
   onClick?: () => void;
   onConnect?: () => void;
+  onShowDetails?: () => void;
 };
 
-export function DeviceCard({ device, tankName, onClick, onConnect }: Props) {
+export function DeviceCard({ device, tankName, onClick, onConnect, onShowDetails }: Props) {
   const status = statusMeta[device.status];
 
   return (
@@ -41,15 +42,29 @@ export function DeviceCard({ device, tankName, onClick, onConnect }: Props) {
               <p className="truncate text-base font-medium" style={{ fontFamily: 'var(--font-heading)', color: colors.textPrimary }}>
                 {device.deviceName}
               </p>
-              <span
-                className="inline-flex items-center gap-1.5 self-start rounded-pill border px-2.5 py-1"
-                style={{ backgroundColor: `${status.color}22`, borderColor: `${status.color}55` }}
-              >
-                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: status.color }} />
-                <span className="text-xs font-semibold" style={{ color: status.color, fontFamily: 'var(--font-body)' }}>
-                  {status.label}
+              <div className="flex shrink-0 items-center gap-2">
+                <span
+                  className="inline-flex items-center gap-1.5 self-start rounded-pill border px-2.5 py-1"
+                  style={{ backgroundColor: `${status.color}22`, borderColor: `${status.color}55` }}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: status.color }} />
+                  <span className="text-xs font-semibold" style={{ color: status.color, fontFamily: 'var(--font-body)' }}>
+                    {status.label}
+                  </span>
                 </span>
-              </span>
+                {onShowDetails && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onShowDetails();
+                    }}
+                    aria-label="View device details and QR code"
+                  >
+                    <QrCode size={16} color={colors.textTertiary} />
+                  </button>
+                )}
+              </div>
             </div>
 
             <p className="truncate text-xs" style={{ fontFamily: 'var(--font-body)', color: colors.textTertiary }}>
