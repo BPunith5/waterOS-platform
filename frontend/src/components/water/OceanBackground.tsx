@@ -30,15 +30,26 @@ export function OceanBackground({ children, bubbles = true, waves = true, varian
   }, []);
 
   // The body of water fills the bottom half of the page by default.
-  // While a tank is open, the water line rises and falls to reflect
-  // that tank's current fill level. Waves ride along its surface and
+  // While a tank is open, the visible water line rises and falls to
+  // reflect that tank's current fill level, ranging from nearly empty
+  // to filling the entire viewport. Waves ride along its surface and
   // bubbles rise up out of it.
   const MIN_WATER_FRAC = 0.04;
   const MAX_WATER_FRAC = 1;
-  const waterFrac =
-    waterLevel != null ? MIN_WATER_FRAC + (MAX_WATER_FRAC - MIN_WATER_FRAC) * Math.min(1, Math.max(0, waterLevel)) : 0.5;
-  const waterHeight = viewportHeight * waterFrac;
+  // The primary wave layer's crest sits below `waterHeight` by a fixed
+  // fraction (determined by its baseline/height proportions below), so
+  // `waterHeight` is scaled up by the inverse of that fraction to make
+  // the visible crest itself reach `waterFrac` of the viewport.
+  const CREST_FRACTION = 0.424;
+  let waterHeight: number;
+  if (waterLevel != null) {
+    const waterFrac = MIN_WATER_FRAC + (MAX_WATER_FRAC - MIN_WATER_FRAC) * Math.min(1, Math.max(0, waterLevel));
+    waterHeight = (viewportHeight * waterFrac) / CREST_FRACTION;
+  } else {
+    waterHeight = viewportHeight * 0.5;
+  }
   const waveBottom = (height: number, baseline: number) => waterHeight - height * baseline;
+  const bubbleWaterHeight = Math.min(waterHeight, viewportHeight);
 
   // When a tank is open, retint the waves and water body toward that
   // tank type's accent color so the page feels "themed" to it.
@@ -112,8 +123,8 @@ export function OceanBackground({ children, bubbles = true, waves = true, varian
       )}
       {bubbles && (
         <>
-          <BubbleField count={18} origin="bottom" waterHeight={waterHeight} />
-          <BubbleField count={16} seedOffset={777} origin="bottom" waterHeight={waterHeight} />
+          <BubbleField count={18} origin="bottom" waterHeight={bubbleWaterHeight} />
+          <BubbleField count={16} seedOffset={777} origin="bottom" waterHeight={bubbleWaterHeight} />
         </>
       )}
       {children}
