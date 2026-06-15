@@ -80,21 +80,6 @@ export function OceanBackground({ children, bubbles = true, waves = true, varian
           />
         </>
       )}
-      {/* Glowing waterline marking the surface, where bubbles emerge */}
-      <div
-        aria-hidden
-        className="absolute inset-x-0"
-        style={{
-          bottom: waterHeight - 1,
-          height: 90,
-          backgroundImage: 'linear-gradient(to top, rgba(34, 211, 238, 0.35), rgba(45, 212, 191, 0.08) 60%, transparent 100%)',
-        }}
-      />
-      <div
-        aria-hidden
-        className="absolute inset-x-0"
-        style={{ bottom: waterHeight, height: 2, backgroundImage: 'linear-gradient(to right, transparent, rgba(125, 240, 255, 0.55), transparent)' }}
-      />
       {bubbles && (
         <>
           <BubbleField count={18} origin="bottom" waterHeight={waterHeight} />
