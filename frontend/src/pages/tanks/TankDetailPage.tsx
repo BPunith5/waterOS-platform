@@ -33,6 +33,7 @@ import { toDisplayTank, generateHistory } from '@/lib/placeholder';
 import { mergeLiveTank } from '@/lib/live';
 import { formatLiters } from '@/lib/format';
 import { useDeviceUpdates, useTankSubscription } from '@/context/SocketContext';
+import { useOceanAccent } from '@/context/OceanThemeContext';
 import { colors, radius, tankTypeMeta } from '@/theme/tokens';
 import { linearGradient } from '@/theme/gradient';
 import type { Tank } from '@/types';
@@ -111,6 +112,8 @@ export function TankDetailPage() {
   );
 
   useDeviceUpdates(handleDeviceUpdate);
+
+  useOceanAccent(tank?.type ?? null);
 
   if (loading) {
     return (

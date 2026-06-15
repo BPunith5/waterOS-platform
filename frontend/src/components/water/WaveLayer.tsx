@@ -52,8 +52,15 @@ export function WaveLayer({
       transition={{ duration: duration / 1000, ease: 'linear', repeat: Infinity }}
     >
       <svg width={W * 2} height={height} viewBox={`0 0 ${W * 2} ${height}`}>
-        <path d={d} fill={color} fillOpacity={opacity} />
-        <path d={d} fill={color} fillOpacity={opacity} transform={`translate(${W}, 0)`} />
+        <motion.path d={d} fillOpacity={opacity} initial={false} animate={{ fill: color }} transition={{ duration: 0.8, ease: 'easeInOut' }} />
+        <motion.path
+          d={d}
+          fillOpacity={opacity}
+          transform={`translate(${W}, 0)`}
+          initial={false}
+          animate={{ fill: color }}
+          transition={{ duration: 0.8, ease: 'easeInOut' }}
+        />
       </svg>
     </motion.div>
   );
