@@ -85,27 +85,26 @@ export function LiquidTabBar() {
         </div>
       </div>
 
-      {/* ── Desktop: left sidebar ── */}
+      {/* ── Desktop: left sidebar full height ── */}
       <motion.div
-        className="fixed left-3 top-1/2 z-40 hidden -translate-y-1/2 flex-col md:flex"
-        animate={{ width: expanded ? 200 : 64 }}
+        className="fixed left-0 top-0 z-40 hidden h-full flex-col md:flex"
+        animate={{ width: expanded ? 220 : 68 }}
         transition={{ type: 'spring', damping: 24, stiffness: 260 }}
         onMouseEnter={() => setExpanded(true)}
         onMouseLeave={() => setExpanded(false)}
         style={{ overflow: 'hidden' }}
       >
         <div
-          className="flex flex-col rounded-[28px] py-3"
+          className="flex h-full flex-col py-4"
           style={{
-            background: 'rgba(3, 20, 46, 0.88)',
+            background: 'rgba(2, 10, 28, 0.96)',
             backdropFilter: 'blur(28px)',
             WebkitBackdropFilter: 'blur(28px)',
-            border: `1px solid ${colors.glassBorder}`,
-            boxShadow: '0 8px 40px rgba(0,0,0,0.5), 0 0 0 0.5px rgba(255,255,255,0.06)',
+            borderRight: `1px solid ${colors.glassBorder}`,
           }}
         >
           {/* Logo */}
-          <div className="mb-3 flex items-center gap-3 overflow-hidden px-4 pb-3" style={{ borderBottom: `1px solid ${colors.glassBorder}` }}>
+          <div className="mb-4 flex items-center gap-3 overflow-hidden px-4 pb-4" style={{ borderBottom: `1px solid ${colors.glassBorder}` }}>
             <div
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl"
               style={{ background: linearGradient(gradients.aquaGlow), boxShadow: `0 0 16px ${colors.cyan}66` }}
@@ -129,7 +128,7 @@ export function LiquidTabBar() {
           </div>
 
           {/* Main nav */}
-          <div className="flex flex-col gap-1 px-2">
+          <div className="flex flex-1 flex-col gap-1 px-2">
             {MAIN_TABS.map((tab) => {
               const active = isActive(tab.path, location.pathname);
               const Icon = tab.icon;
@@ -148,10 +147,10 @@ export function LiquidTabBar() {
           </div>
 
           {/* Divider */}
-          <div className="mx-4 my-3" style={{ height: 1, backgroundColor: colors.glassBorder }} />
+          <div className="mx-4 my-3 mt-auto" style={{ height: 1, backgroundColor: colors.glassBorder }} />
 
           {/* Bottom nav */}
-          <div className="flex flex-col gap-1 px-2">
+          <div className="flex flex-col gap-1 px-2 pb-2">
             {BOTTOM_TABS.map((tab) => {
               const active = isActive(tab.path, location.pathname);
               const Icon = tab.icon;

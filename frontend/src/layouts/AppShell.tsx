@@ -10,7 +10,7 @@ export function AppShell() {
   return (
     <div className="relative min-h-screen">
       <OceanBackground />
-      <main className="relative px-4 pb-32 pt-6 md:pl-24 md:pb-10 md:pr-8 md:pt-8">
+      <main className="relative px-4 pb-32 pt-6 md:pl-20 md:pb-10 md:pr-8 md:pt-8">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={location.pathname}
