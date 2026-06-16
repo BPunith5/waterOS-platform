@@ -1,19 +1,13 @@
 import { motion } from 'framer-motion';
-import { GlassSurface } from '@/components/glass/GlassSurface';
 import { PressableScale } from '@/components/glass/PressableScale';
 import { WaterVessel } from './WaterVessel';
 import { colors, tankTypeMeta } from '@/theme/tokens';
+import { linearGradient } from '@/theme/gradient';
 import type { Tank } from '@/types';
 
 type Props = {
   tank: Tank;
   onClick?: () => void;
-};
-
-const statusLabel: Record<Tank['status'], string> = {
-  optimal: 'Optimal',
-  warning: 'Warning',
-  critical: 'Critical',
 };
 
 const statusColor: Record<Tank['status'], string> = {
@@ -25,90 +19,92 @@ const statusColor: Record<Tank['status'], string> = {
 export function TankGridCard({ tank, onClick }: Props) {
   const meta = tankTypeMeta[tank.type];
   const isRound = meta.shape === 'round';
-  const vesselW = isRound ? 68 : 48;
-  const vesselH = isRound ? 68 : 92;
+  const vesselW = isRound ? 80 : 56;
+  const vesselH = isRound ? 80 : 108;
 
   const sColor = tank.connected ? statusColor[tank.status] : colors.textTertiary;
-  const sLabel = tank.connected ? statusLabel[tank.status] : 'No Sensor';
-  const healthPct = tank.connected ? Math.round(tank.health * 100) : 0;
-  const qualityPct = tank.connected ? Math.round(tank.quality * 100) : 0;
   const levelPct = tank.connected ? Math.round(tank.currentLevel * 100) : null;
+  const qualityPct = tank.connected ? Math.round(tank.quality * 100) : 0;
+  const qualityColor = qualityPct >= 70 ? colors.success : qualityPct >= 40 ? colors.warning : colors.danger;
 
   return (
     <PressableScale onClick={onClick} className="w-full">
-      <GlassSurface borderRadius={12} interactive className="flex flex-col gap-2 p-3">
+      <div
+        className="relative flex flex-col gap-2.5 overflow-hidden rounded-2xl p-3 transition-all duration-200"
+        style={{
+          background: 'rgba(255,255,255,0.06)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: `1px solid ${colors.glassBorder}`,
+          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.1)`,
+        }}
+      >
+        {/* Top accent gradient bar */}
+        <div
+          className="absolute inset-x-0 top-0 h-[2px] rounded-t-2xl"
+          style={{ backgroundImage: linearGradient(meta.gradient, 90) }}
+        />
+
+        {/* Type badge */}
+        <div className="flex items-center justify-between">
+          <span
+            className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest"
+            style={{ backgroundColor: `${meta.accent}18`, color: meta.accent, fontFamily: 'var(--font-body)' }}
+          >
+            {meta.label}
+          </span>
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: sColor, boxShadow: `0 0 6px ${sColor}` }} />
+        </div>
+
         {/* Vessel */}
-        <div className="flex items-end justify-center" style={{ minHeight: vesselH + 4 }}>
+        <div className="flex items-end justify-center" style={{ minHeight: vesselH + 8 }}>
           <WaterVessel
             width={vesselW}
             height={vesselH}
             percentage={tank.connected ? tank.currentLevel : 0}
             color={meta.accent}
             shape={meta.shape}
-            radius={9}
+            radius={10}
             showBubbles={tank.connected && tank.currentLevel > 0.1}
           />
         </div>
 
-        {/* Name + level */}
-        <div>
-          <p className="truncate text-sm font-semibold" style={{ fontFamily: 'var(--font-heading)', color: colors.textPrimary }}>
-            {tank.name}
-          </p>
-          <div className="mt-0.5 flex items-baseline gap-1">
-            {levelPct !== null ? (
-              <span className="text-xl font-bold leading-none" style={{ fontFamily: 'var(--font-heading)', color: meta.accent }}>
-                {levelPct}<span className="text-xs font-medium" style={{ color: colors.textSecondary }}>%</span>
-              </span>
-            ) : (
-              <span className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>—</span>
-            )}
+        {/* Name */}
+        <p className="truncate text-sm font-semibold leading-tight" style={{ fontFamily: 'var(--font-heading)', color: colors.textPrimary }}>
+          {tank.name}
+        </p>
+
+        {/* Level */}
+        {levelPct !== null ? (
+          <div className="flex items-baseline gap-0.5">
+            <span className="text-2xl font-bold leading-none" style={{ fontFamily: 'var(--font-heading)', color: meta.accent }}>
+              {levelPct}
+            </span>
+            <span className="text-xs font-medium" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>%</span>
           </div>
-        </div>
+        ) : (
+          <span className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>No sensor</span>
+        )}
 
         {/* Quality bar */}
         {tank.connected && (
           <div>
-            <div className="flex items-center justify-between mb-0.5">
-              <span className="text-[9px] uppercase tracking-wide" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-                Quality
-              </span>
-              <span className="text-[9px] font-semibold" style={{ color: meta.accent, fontFamily: 'var(--font-body)' }}>
-                {qualityPct}%
-              </span>
+            <div className="mb-1 flex items-center justify-between">
+              <span className="text-[9px] uppercase tracking-wide" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>Quality</span>
+              <span className="text-[9px] font-bold" style={{ color: qualityColor, fontFamily: 'var(--font-body)' }}>{qualityPct}%</span>
             </div>
-            <div className="h-1 w-full overflow-hidden rounded-full" style={{ backgroundColor: colors.glassFill }}>
+            <div className="h-1 w-full overflow-hidden rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>
               <motion.div
                 className="h-full rounded-full"
-                style={{ backgroundColor: qualityPct >= 70 ? colors.success : qualityPct >= 40 ? colors.warning : colors.danger }}
+                style={{ backgroundColor: qualityColor }}
                 initial={{ width: 0 }}
                 animate={{ width: `${qualityPct}%` }}
-                transition={{ duration: 0.8, ease: [0.215, 0.61, 0.355, 1] }}
+                transition={{ duration: 0.9, ease: [0.215, 0.61, 0.355, 1] }}
               />
             </div>
           </div>
         )}
-
-        {/* Status + health row */}
-        <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-1">
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: sColor }} />
-            <span className="text-[10px] font-semibold" style={{ color: sColor, fontFamily: 'var(--font-body)' }}>
-              {sLabel}
-            </span>
-          </span>
-          {tank.connected && (
-            <span className="text-[10px]" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-              ❤ {healthPct}%
-            </span>
-          )}
-        </div>
-
-        {/* Type label */}
-        <p className="truncate text-[9px] uppercase tracking-wide" style={{ fontFamily: 'var(--font-body)', color: colors.textTertiary }}>
-          {meta.label}
-        </p>
-      </GlassSurface>
+      </div>
     </PressableScale>
   );
 }
