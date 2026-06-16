@@ -7,6 +7,7 @@ import { GlassInput } from '@/components/glass/GlassInput';
 import { LiquidButton } from '@/components/glass/LiquidButton';
 import { LiquidCheckbox } from '@/components/glass/LiquidCheckbox';
 import { PressableScale } from '@/components/glass/PressableScale';
+import { OceanBackground } from '@/components/water/OceanBackground';
 import { useAuth } from '@/context/AuthContext';
 import { colors, gradients, radius, shadows } from '@/theme/tokens';
 import { linearGradient } from '@/theme/gradient';
@@ -50,6 +51,7 @@ export function SignupPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-5 py-12">
+      <OceanBackground />
       <motion.div
         className="w-full max-w-md"
         initial={{ opacity: 0, y: 24 }}

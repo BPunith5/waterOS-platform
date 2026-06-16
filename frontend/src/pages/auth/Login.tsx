@@ -5,6 +5,7 @@ import { Droplet, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { GlassSurface } from '@/components/glass/GlassSurface';
 import { GlassInput } from '@/components/glass/GlassInput';
 import { LiquidButton } from '@/components/glass/LiquidButton';
+import { OceanBackground } from '@/components/water/OceanBackground';
 import { useAuth } from '@/context/AuthContext';
 import { colors, gradients, radius, shadows } from '@/theme/tokens';
 import { linearGradient } from '@/theme/gradient';
@@ -35,6 +36,7 @@ export function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-5 py-12">
+      <OceanBackground />
       <motion.div
         className="w-full max-w-md"
         initial={{ opacity: 0, y: 24 }}
