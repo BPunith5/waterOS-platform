@@ -72,7 +72,7 @@ export function OceanBackground({ children, bubbles = true, waves = true, varian
             className="absolute inset-0"
             style={{ backgroundImage: linearGradient(accentMeta.gradient, 125) }}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.28 }}
+            animate={{ opacity: 0.18 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8, ease: 'easeInOut' }}
           />
@@ -86,36 +86,36 @@ export function OceanBackground({ children, bubbles = true, waves = true, varian
         style={{
           height: waterHeight,
           transition: 'height 1.1s ease',
-          backgroundImage: `linear-gradient(to bottom, transparent, rgba(34, 211, 238, 0.12) 10%, ${tint(colors.oceanBlue)} 28%, ${tint(colors.abyss)} 100%)`,
+          backgroundImage: `linear-gradient(to bottom, transparent, rgba(34, 211, 238, 0.07) 10%, ${tint(colors.oceanBlue)} 28%, ${tint(colors.abyss)} 100%)`,
         }}
       />
       {waves && (
         <>
           <WaveLayer
             color={tint(colors.oceanBlue)}
-            opacity={0.55}
-            amplitude={22}
+            opacity={0.4}
+            amplitude={11}
             baseline={0.82}
-            duration={16000}
+            duration={22000}
             height={waterHeight * 0.9}
             bottom={waveBottom(waterHeight * 0.9, 0.82)}
           />
           <WaveLayer
             color={tint(colors.midOcean)}
-            opacity={0.45}
-            amplitude={30}
+            opacity={0.32}
+            amplitude={15}
             baseline={0.86}
-            duration={11000}
+            duration={16000}
             height={waterHeight * 0.85}
             bottom={waveBottom(waterHeight * 0.85, 0.86)}
             reverse
           />
           <WaveLayer
             color={tint(colors.surfaceBlue)}
-            opacity={0.35}
-            amplitude={18}
+            opacity={0.24}
+            amplitude={9}
             baseline={0.9}
-            duration={20000}
+            duration={27000}
             height={waterHeight * 0.8}
             bottom={waveBottom(waterHeight * 0.8, 0.9)}
           />
@@ -123,8 +123,8 @@ export function OceanBackground({ children, bubbles = true, waves = true, varian
       )}
       {bubbles && (
         <>
-          <BubbleField count={18} origin="bottom" waterHeight={bubbleWaterHeight} />
-          <BubbleField count={16} seedOffset={777} origin="bottom" waterHeight={bubbleWaterHeight} />
+          <BubbleField count={7} origin="bottom" waterHeight={bubbleWaterHeight} />
+          <BubbleField count={6} seedOffset={777} origin="bottom" waterHeight={bubbleWaterHeight} />
         </>
       )}
       {children}

@@ -143,8 +143,8 @@ textarea::placeholder {
 .aurora-blob {
   position: absolute;
   border-radius: 999px;
-  filter: blur(80px);
-  opacity: 0.35;
+  filter: blur(100px);
+  opacity: 0.16;
   pointer-events: none;
 }
 

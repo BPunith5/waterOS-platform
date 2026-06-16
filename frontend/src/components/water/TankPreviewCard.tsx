@@ -19,7 +19,7 @@ export function TankPreviewCard({ tank, onClick, width = 168 }: Props) {
     <PressableScale onClick={onClick}>
       <GlassSurface interactive className="p-4" style={{ width }}>
         <div className="flex gap-4">
-          <WaterVessel width={52} height={104} percentage={tank.currentLevel} color={meta.accent} radius={18} showBubbles={false} />
+          <WaterVessel width={meta.shape === 'round' ? 60 : 48} height={meta.shape === 'round' ? 60 : 100} percentage={tank.connected ? tank.currentLevel : 0} color={meta.accent} shape={meta.shape} radius={10} showBubbles={false} />
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div
               className="mb-0.5 flex h-[26px] w-[26px] items-center justify-center rounded-full border"

@@ -1,5 +1,5 @@
 import { Cog, Droplet, Fish, Leaf, type LucideIcon } from 'lucide-react';
-import type { TankType } from '@/types';
+import type { TankType, VesselShape } from '@/types';
 
 // WaterOS design tokens — deep ocean glassmorphism design language (web port).
 
@@ -112,30 +112,34 @@ export const shadows = {
 
 export const tankTypeMeta: Record<
   TankType,
-  { label: string; gradient: readonly string[]; icon: LucideIcon; accent: string }
+  { label: string; gradient: readonly string[]; icon: LucideIcon; accent: string; shape: VesselShape }
 > = {
   drinking: {
     label: 'Drinking Water',
     gradient: gradients.drinking,
     icon: Droplet,
     accent: colors.cyan,
+    shape: 'rect',
   },
   aquaculture: {
     label: 'Aquaculture',
     gradient: gradients.aquaculture,
     icon: Fish,
     accent: colors.success,
+    shape: 'round',
   },
   industrial: {
     label: 'Industrial',
     gradient: gradients.industrial,
     icon: Cog,
     accent: '#7C8FE8',
+    shape: 'cone',
   },
   irrigation: {
     label: 'Irrigation',
     gradient: gradients.irrigation,
     icon: Leaf,
     accent: '#A3E635',
+    shape: 'pill',
   },
 };

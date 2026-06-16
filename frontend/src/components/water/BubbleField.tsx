@@ -90,11 +90,11 @@ export function BubbleField({ count = 14, seedOffset = 0, origin = 'top', waterH
       const r4 = seeded(i + 151 + seedOffset);
       const r5 = seeded(i + 201 + seedOffset);
       return {
-        size: 12 + r1 * 46,
+        size: 6 + r1 * 22,
         left: r2 * (viewport.width - 50),
-        duration: 9000 + r3 * 9000,
+        duration: 11000 + r3 * 10000,
         delay: r4 * 9000,
-        opacity: 0.3 + r1 * 0.45,
+        opacity: 0.12 + r1 * 0.22,
         startFrac: r5,
       };
     });

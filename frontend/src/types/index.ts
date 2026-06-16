@@ -1,5 +1,7 @@
 export type TankType = 'drinking' | 'aquaculture' | 'industrial' | 'irrigation';
 
+export type VesselShape = 'rect' | 'pill' | 'round' | 'cone';
+
 export type TankStatus = 'optimal' | 'warning' | 'critical';
 
 export type Tank = {

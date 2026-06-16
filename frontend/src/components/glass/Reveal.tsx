@@ -25,14 +25,14 @@ export function Reveal({ children, index = 0, delay, className, style }: RevealP
     <motion.div
       className={className}
       style={style}
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        duration: 0.56,
+        duration: 0.45,
         delay: computedDelay,
         type: 'spring',
-        damping: 17,
-        stiffness: 140,
+        damping: 26,
+        stiffness: 220,
       }}
       layout
     >
