@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Activity, Droplet, FlaskConical, Sparkles, Thermometer } from 'lucide-react';
+import { Activity, Droplet, FlaskConical, Sparkles, Thermometer, TrendingUp } from 'lucide-react';
 import { FilterPill } from '@/components/glass/FilterPill';
 import { GlassSurface } from '@/components/glass/GlassSurface';
 import { Skeleton } from '@/components/glass/Skeleton';
 import { SectionHeader } from '@/components/glass/SectionHeader';
+import { StatCard } from '@/components/glass/StatCard';
 import { HistoryBarChart } from '@/components/water/HistoryBarChart';
 import { MetricOrbCard } from '@/components/water/MetricOrbCard';
 import { api, type AnalyticsResponse, type AnalyticsRange, type TankRecord } from '@/lib/api';
-import { colors, gradients, radius, tankTypeMeta } from '@/theme/tokens';
-import { linearGradient } from '@/theme/gradient';
+import { colors, gradients, tankTypeMeta } from '@/theme/tokens';
 
 const RANGES: { key: AnalyticsRange; label: string }[] = [
   { key: '7D', label: '7 Days' },
@@ -46,87 +46,64 @@ export function AnalyticsPage() {
   const summary = data?.summary;
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="w-full">
+      {/* ── Header ──────────────────────────────────────────── */}
       <div className="mb-5">
         <h1 className="text-2xl font-bold" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
           Analytics
         </h1>
-        <p className="mt-1 text-sm" style={{ color: colors.textSecondary, fontFamily: 'var(--font-body)' }}>
-          Trends across {tankId ? 'this tank' : 'your tanks'}
+        <p className="mt-0.5 text-sm" style={{ color: colors.textSecondary, fontFamily: 'var(--font-body)' }}>
+          Trends across {tankId ? tanks.find((t) => t._id === tankId)?.tankName ?? 'this tank' : 'all tanks'}
         </p>
       </div>
 
-      <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
-        {RANGES.map((r) => (
-          <FilterPill key={r.key} label={r.label} active={range === r.key} onClick={() => setRange(r.key)} gradient={gradients.aquaGlow} />
-        ))}
+      {/* ── Filters row ─────────────────────────────────────── */}
+      <div className="mb-5 flex flex-wrap gap-2">
+        <div className="flex gap-2 overflow-x-auto">
+          {RANGES.map((r) => (
+            <FilterPill key={r.key} label={r.label} active={range === r.key} onClick={() => setRange(r.key)} gradient={gradients.aquaGlow} />
+          ))}
+        </div>
+        {tanks.length > 0 && (
+          <>
+            <div className="h-5 w-px self-center" style={{ backgroundColor: colors.glassBorder }} />
+            <div className="flex gap-2 overflow-x-auto">
+              <FilterPill label="All Tanks" active={!tankId} onClick={() => setTankId(undefined)} gradient={gradients.aquaGlow} />
+              {tanks.map((t) => (
+                <FilterPill key={t._id} label={t.tankName} active={tankId === t._id} onClick={() => setTankId(t._id)} gradient={tankTypeMeta[t.tankType].gradient} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
-      {tanks.length > 0 && (
-        <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
-          <FilterPill label="All Tanks" active={!tankId} onClick={() => setTankId(undefined)} gradient={gradients.aquaGlow} />
-          {tanks.map((t) => (
-            <FilterPill key={t._id} label={t.tankName} active={tankId === t._id} onClick={() => setTankId(t._id)} gradient={tankTypeMeta[t.tankType].gradient} />
-          ))}
+      {/* ── Top stat row ────────────────────────────────────── */}
+      {!loading && summary && (
+        <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCard icon={Droplet} value={summary.avgWaterLevel != null ? `${Math.round(summary.avgWaterLevel * 100)}%` : '—'} label="Avg Water Level" color={colors.cyan} />
+          <StatCard icon={Sparkles} value={summary.avgQuality != null ? `${Math.round(summary.avgQuality * 100)}%` : '—'} label="Avg Quality" color={colors.electricBlue} />
+          <StatCard icon={Thermometer} value={summary.avgTemperature != null ? `${summary.avgTemperature.toFixed(1)}°C` : '—'} label="Avg Temperature" color={colors.warning} />
+          <StatCard icon={TrendingUp} value={`${Math.round(summary.deviceUptimePercent)}%`} label="Device Uptime" color={colors.success} />
+        </div>
+      )}
+      {loading && (
+        <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)}
         </div>
       )}
 
-      {loading || !summary ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-[88px]" />
-          ))}
-        </div>
-      ) : (
-        <>
-          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <MetricOrbCard
-              icon={<Droplet size={22} color={colors.cyan} />}
-              label="Avg Water Level"
-              value={summary.avgWaterLevel != null ? `${Math.round(summary.avgWaterLevel * 100)}` : '—'}
-              unit="%"
-              percentage={summary.avgWaterLevel ?? 0}
-              color={colors.cyan}
-            />
-            <MetricOrbCard
-              icon={<Sparkles size={22} color={colors.electricBlue} />}
-              label="Avg Water Quality"
-              value={summary.avgQuality != null ? `${Math.round(summary.avgQuality * 100)}` : '—'}
-              unit="%"
-              percentage={summary.avgQuality ?? 0}
-              color={colors.electricBlue}
-            />
-            <MetricOrbCard
-              icon={<Thermometer size={22} color={colors.warning} />}
-              label="Avg Temperature"
-              value={summary.avgTemperature != null ? summary.avgTemperature.toFixed(1) : '—'}
-              unit="°C"
-              percentage={(summary.avgTemperature ?? 0) / 40}
-              color={colors.warning}
-            />
-            <MetricOrbCard
-              icon={<FlaskConical size={22} color={colors.seafoam} />}
-              label="Avg pH"
-              value={summary.avgPh != null ? summary.avgPh.toFixed(1) : '—'}
-              percentage={(summary.avgPh ?? 0) / 14}
-              color={colors.seafoam}
-            />
-            <MetricOrbCard
-              icon={<Activity size={22} color={colors.success} />}
-              label="Device Uptime"
-              value={`${Math.round(summary.deviceUptimePercent)}`}
-              unit="%"
-              percentage={summary.deviceUptimePercent / 100}
-              color={colors.success}
-            />
-          </div>
-
-          <div className="mb-8">
+      {/* ── Two-column main ─────────────────────────────────── */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        {/* LEFT: Charts (2/3) */}
+        <div className="flex flex-col gap-5 lg:col-span-2">
+          <div>
             <SectionHeader title="Water Level Trend" />
-            {chartData.length > 0 ? (
+            {loading ? (
+              <Skeleton className="h-48" />
+            ) : chartData.length > 0 ? (
               <HistoryBarChart data={chartData} color={colors.cyan} />
             ) : (
-              <GlassSurface className="flex flex-col items-center gap-2 p-8 text-center">
+              <GlassSurface borderRadius={12} className="flex flex-col items-center gap-2 p-10 text-center">
                 <p className="text-sm font-semibold" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
                   No data yet
                 </p>
@@ -137,30 +114,90 @@ export function AnalyticsPage() {
             )}
           </div>
 
-          {data && data.distribution.length > 0 && (
-            <div className="mb-8">
-              <SectionHeader title="Tank Distribution" />
-              <div className="flex flex-wrap gap-2">
+          {/* Tank distribution */}
+          {!loading && data && data.distribution.length > 0 && (
+            <div>
+              <SectionHeader title="Fleet Distribution" />
+              <GlassSurface borderRadius={12} className="flex flex-col divide-y" style={{ borderColor: colors.glassBorder }}>
                 {data.distribution.map((d) => {
                   const meta = tankTypeMeta[d.type];
+                  const pct = data.distribution.reduce((s, x) => s + x.count, 0);
                   return (
-                    <span
-                      key={d.type}
-                      className="relative inline-flex items-center gap-1.5 overflow-hidden rounded-pill px-3 py-1.5"
-                      style={{ backgroundImage: linearGradient(meta.gradient), borderRadius: radius.pill }}
-                    >
-                      <meta.icon size={12} color={colors.textInverse} />
-                      <span className="text-xs font-bold" style={{ color: colors.textInverse, fontFamily: 'var(--font-body)' }}>
-                        {meta.label} · {d.count}
+                    <div key={d.type} className="flex items-center gap-3 px-4 py-3">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full" style={{ backgroundColor: `${meta.accent}22` }}>
+                        <meta.icon size={14} color={meta.accent} />
+                      </div>
+                      <span className="flex-1 text-sm" style={{ color: colors.textSecondary, fontFamily: 'var(--font-body)' }}>
+                        {meta.label}
                       </span>
-                    </span>
+                      <div className="flex items-center gap-2">
+                        <div className="h-1.5 w-16 overflow-hidden rounded-full" style={{ backgroundColor: colors.glassFill }}>
+                          <div className="h-full rounded-full" style={{ width: `${(d.count / pct) * 100}%`, backgroundColor: meta.accent }} />
+                        </div>
+                        <span className="text-sm font-semibold" style={{ color: meta.accent, fontFamily: 'var(--font-heading)' }}>
+                          {d.count}
+                        </span>
+                      </div>
+                    </div>
                   );
                 })}
-              </div>
+              </GlassSurface>
             </div>
           )}
-        </>
-      )}
+        </div>
+
+        {/* RIGHT: Metric orbs (1/3) */}
+        <div className="flex flex-col gap-3">
+          <SectionHeader title="Key Metrics" />
+          {loading ? (
+            <>
+              {[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-[88px]" />)}
+            </>
+          ) : summary ? (
+            <>
+              <MetricOrbCard
+                icon={<Droplet size={20} color={colors.cyan} />}
+                label="Avg Water Level"
+                value={summary.avgWaterLevel != null ? `${Math.round(summary.avgWaterLevel * 100)}` : '—'}
+                unit="%"
+                percentage={summary.avgWaterLevel ?? 0}
+                color={colors.cyan}
+              />
+              <MetricOrbCard
+                icon={<Sparkles size={20} color={colors.electricBlue} />}
+                label="Avg Quality"
+                value={summary.avgQuality != null ? `${Math.round(summary.avgQuality * 100)}` : '—'}
+                unit="%"
+                percentage={summary.avgQuality ?? 0}
+                color={colors.electricBlue}
+              />
+              <MetricOrbCard
+                icon={<Thermometer size={20} color={colors.warning} />}
+                label="Avg Temperature"
+                value={summary.avgTemperature != null ? summary.avgTemperature.toFixed(1) : '—'}
+                unit="°C"
+                percentage={(summary.avgTemperature ?? 0) / 40}
+                color={colors.warning}
+              />
+              <MetricOrbCard
+                icon={<FlaskConical size={20} color={colors.seafoam} />}
+                label="Avg pH"
+                value={summary.avgPh != null ? summary.avgPh.toFixed(1) : '—'}
+                percentage={(summary.avgPh ?? 0) / 14}
+                color={colors.seafoam}
+              />
+              <MetricOrbCard
+                icon={<Activity size={20} color={colors.success} />}
+                label="Device Uptime"
+                value={`${Math.round(summary.deviceUptimePercent)}`}
+                unit="%"
+                percentage={summary.deviceUptimePercent / 100}
+                color={colors.success}
+              />
+            </>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

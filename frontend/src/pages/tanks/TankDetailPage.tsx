@@ -17,6 +17,7 @@ import {
   Pencil,
   Trash2,
   Cpu,
+  MapPin,
 } from 'lucide-react';
 import { IconButton } from '@/components/glass/IconButton';
 import { Reveal } from '@/components/glass/Reveal';
@@ -35,8 +36,7 @@ import { mergeLiveTank } from '@/lib/live';
 import { formatLiters } from '@/lib/format';
 import { useDeviceUpdates, useTankSubscription } from '@/context/SocketContext';
 import { useOceanAccent } from '@/context/OceanThemeContext';
-import { colors, radius, tankTypeMeta } from '@/theme/tokens';
-import { linearGradient } from '@/theme/gradient';
+import { colors, tankTypeMeta } from '@/theme/tokens';
 import type { Tank } from '@/types';
 
 const trendMeta: Record<Tank['trend'], { icon: typeof TrendingUp; color: string; label: string }> = {
@@ -57,7 +57,6 @@ export function TankDetailPage() {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-
     (async () => {
       let record;
       try {
@@ -70,7 +69,6 @@ export function TankDetailPage() {
 
       let displayTank = toDisplayTank(record);
       let matchedDevice: DeviceRecord | null = null;
-      let initialWaterLevel: number | null = null;
 
       try {
         const devices = await api.devices.list();
@@ -79,25 +77,19 @@ export function TankDetailPage() {
           matchedDevice = match;
           const logs = await api.telemetry.logs(match.deviceId, 1);
           if (logs[0]) {
-            initialWaterLevel = logs[0].waterLevel;
+            lastWaterLevelRef.current = logs[0].waterLevel;
             displayTank = mergeLiveTank(displayTank, match, logs[0]);
           }
         }
-      } catch {
-        // live data unavailable; fall back to placeholder readings
-      }
+      } catch { /* fall back */ }
 
       if (!cancelled) {
-        lastWaterLevelRef.current = initialWaterLevel;
         setDevice(matchedDevice);
         setTank(displayTank);
         setLoading(false);
       }
     })();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [id, navigate]);
 
   useTankSubscription(id);
@@ -113,13 +105,17 @@ export function TankDetailPage() {
   );
 
   useDeviceUpdates(handleDeviceUpdate);
-
   useOceanAccent(tank?.type ?? null, tank?.connected ? tank.currentLevel : null);
 
   if (loading) {
     return (
-      <div className="mx-auto w-full max-w-2xl">
-        <Skeleton className="h-56" borderRadius={radius.xl} />
+      <div className="w-full">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <Skeleton className="h-96" borderRadius={12} />
+          <div className="grid grid-cols-2 gap-3 lg:col-span-2">
+            {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-[88px]" borderRadius={12} />)}
+          </div>
+        </div>
       </div>
     );
   }
@@ -127,10 +123,10 @@ export function TankDetailPage() {
   if (!tank) return null;
 
   const meta = tankTypeMeta[tank.type];
-  const TypeIcon = meta.icon;
   const trend = trendMeta[tank.trend];
   const TrendIcon = trend.icon;
   const levelHistory = generateHistory(tank.currentLevel, 0.18);
+  const isRound = meta.shape === 'round';
 
   async function handleRemove() {
     if (!id) return;
@@ -139,205 +135,233 @@ export function TankDetailPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="w-full">
+      {/* ── Back nav ──────────────────────────────────────── */}
       <div className="mb-5 flex items-center gap-3">
         <IconButton icon={ChevronLeft} onClick={() => navigate('/tanks')} />
-        <div className="min-w-0 flex-1 text-center">
-          <p className="truncate text-base font-bold" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-lg font-bold" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
             {tank.name}
           </p>
-          <p className="truncate text-xs" style={{ color: colors.textSecondary, fontFamily: 'var(--font-body)' }}>
-            {tank.location}
-          </p>
+          <div className="flex items-center gap-1">
+            <MapPin size={11} color={colors.textTertiary} />
+            <p className="truncate text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+              {tank.location}
+            </p>
+          </div>
         </div>
         <IconButton icon={MoreHorizontal} onClick={() => setMenuOpen(true)} />
       </div>
 
-      {/* Hero — pops up and expands horizontally into view */}
-      <motion.div
-        className="mb-8"
-        initial={{ opacity: 0, y: 18, width: '72%' }}
-        animate={{ opacity: 1, y: 0, width: '100%' }}
-        transition={{ type: 'spring', damping: 22, stiffness: 190 }}
-      >
-        <GlassSurface borderRadius={radius.xl} className="flex items-center gap-6 p-5">
-          <WaterVessel width={120} height={232} percentage={tank.currentLevel} color={meta.accent} radius={32} />
-          <div className="min-w-0 flex-1">
-            <span
-              className="relative mb-2 inline-flex items-center gap-1 overflow-hidden rounded-pill px-2.5 py-[5px]"
-              style={{ backgroundImage: linearGradient(meta.gradient) }}
-            >
-              <TypeIcon size={12} color={colors.textInverse} />
-              <span className="text-[10px] font-bold tracking-wide" style={{ fontFamily: 'var(--font-body)', color: colors.textInverse }}>
-                {meta.label}
-              </span>
-            </span>
+      {/* ── Two-column main layout ─────────────────────────── */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
 
-            <p className="text-4xl font-bold leading-tight" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
-              {tank.connected ? `${Math.round(tank.currentLevel * 100)}%` : '—'}
-            </p>
-            <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-              {tank.connected ? 'Current Level' : 'No sensor connected'}
-            </p>
-
-            <div className="my-3 h-px" style={{ backgroundColor: colors.glassBorder }} />
-
-            {tank.connected ? (
-              <>
-                <p className="text-base font-medium" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
-                  {formatLiters(tank.capacityLiters * tank.currentLevel)}
-                </p>
-                <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-                  of {formatLiters(tank.capacityLiters)} capacity
-                </p>
-              </>
-            ) : (
-              <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-                {formatLiters(tank.capacityLiters)} capacity
-              </p>
-            )}
-
-            <div className="mt-4 flex items-center justify-between">
-              {tank.connected ? (
-                <StatusPill status={tank.status} />
-              ) : (
-                <span
-                  className="inline-flex items-center gap-1.5 self-start rounded-pill border px-2.5 py-1.5"
-                  style={{ backgroundColor: `${colors.textTertiary}1a`, borderColor: colors.glassBorder }}
-                >
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: colors.textTertiary }} />
-                  <span className="text-xs font-semibold" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-                    Not Connected
+        {/* LEFT: Hero vessel + info + actions */}
+        <div className="flex flex-col gap-4">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', damping: 22, stiffness: 190 }}
+          >
+            <GlassSurface borderRadius={12} className="flex flex-col items-center gap-4 p-5">
+              {/* Type badge */}
+              <div className="flex w-full items-center justify-between">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: meta.accent }} />
+                  <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+                    {meta.label}
                   </span>
                 </span>
-              )}
-              {tank.connected && (
-                <div className="flex items-center gap-1">
-                  <TrendIcon size={14} color={trend.color} />
-                  <span className="text-xs font-semibold" style={{ color: trend.color, fontFamily: 'var(--font-body)' }}>
-                    {trend.label}
+                {tank.connected && <TrendIcon size={16} color={trend.color} />}
+              </div>
+
+              {/* Vessel */}
+              <WaterVessel
+                width={isRound ? 160 : 110}
+                height={isRound ? 160 : 200}
+                percentage={tank.connected ? tank.currentLevel : 0}
+                color={meta.accent}
+                shape={meta.shape}
+                radius={28}
+                showBubbles={tank.connected}
+              />
+
+              {/* Level */}
+              <div className="w-full text-center">
+                <p className="text-5xl font-bold leading-tight" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
+                  {tank.connected ? `${Math.round(tank.currentLevel * 100)}%` : '—'}
+                </p>
+                <p className="mt-0.5 text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+                  {tank.connected
+                    ? `${formatLiters(tank.capacityLiters * tank.currentLevel)} of ${formatLiters(tank.capacityLiters)}`
+                    : `${formatLiters(tank.capacityLiters)} capacity`}
+                </p>
+              </div>
+
+              <div className="h-px w-full" style={{ backgroundColor: colors.glassBorder }} />
+
+              {/* Status row */}
+              <div className="flex w-full items-center justify-between">
+                {tank.connected ? (
+                  <StatusPill status={tank.status} />
+                ) : (
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1"
+                    style={{ backgroundColor: `${colors.textTertiary}1a`, borderColor: colors.glassBorder }}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: colors.textTertiary }} />
+                    <span className="text-xs font-semibold" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+                      Not Connected
+                    </span>
                   </span>
+                )}
+                <div className="flex items-center gap-1.5">
+                  {device && (
+                    <motion.span
+                      className="inline-block h-1.5 w-1.5 rounded-full"
+                      style={{ backgroundColor: colors.success }}
+                      animate={{ opacity: [1, 0.35, 1] }}
+                      transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                  )}
+                  <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+                    {device ? `Live · ${tank.lastUpdated}` : tank.lastUpdated}
+                  </p>
                 </div>
-              )}
-            </div>
-            <div className="mt-3 flex items-center gap-1.5">
-              {device && (
-                <motion.span
-                  aria-hidden
-                  className="inline-block h-1.5 w-1.5 rounded-full"
-                  style={{ backgroundColor: colors.success }}
-                  animate={{ opacity: [1, 0.35, 1] }}
-                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+              </div>
+            </GlassSurface>
+          </motion.div>
+
+          {/* Actions */}
+          <Reveal index={1} className="flex flex-col gap-2">
+            {!device && (
+              <LiquidButton
+                label="Connect a Sensor"
+                variant="primary"
+                icon={<Cpu size={16} color={colors.textInverse} />}
+                onClick={() => navigate(`/devices/add`)}
+                fullWidth
+              />
+            )}
+            <LiquidButton
+              label="View Analytics"
+              variant={device ? 'primary' : 'glass'}
+              icon={<BarChart3 size={16} color={device ? colors.textInverse : colors.textPrimary} />}
+              onClick={() => navigate('/analytics')}
+              fullWidth
+            />
+            <LiquidButton
+              label="Schedule Maintenance"
+              variant="ghost"
+              icon={<Wrench size={16} color={colors.textPrimary} />}
+              onClick={() => {}}
+              fullWidth
+            />
+          </Reveal>
+        </div>
+
+        {/* RIGHT: Readings + Chart (2/3 of screen) */}
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          {tank.connected ? (
+            <>
+              <Reveal index={0}>
+                <SectionHeader title="Live Readings" />
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  <MetricOrbCard
+                    icon={<Thermometer size={20} color={colors.warning} />}
+                    label="Temperature"
+                    value={tank.temperature.toFixed(1)}
+                    unit="°C"
+                    percentage={tank.temperature / 40}
+                    color={colors.warning}
+                  />
+                  <MetricOrbCard
+                    icon={<FlaskConical size={20} color={colors.seafoam} />}
+                    label="pH Level"
+                    value={tank.ph.toFixed(1)}
+                    percentage={tank.ph / 14}
+                    color={colors.seafoam}
+                  />
+                  <MetricOrbCard
+                    icon={<Leaf size={20} color={colors.success} />}
+                    label="Dissolved O₂"
+                    value={`${Math.round(tank.dissolvedOxygen * 100)}`}
+                    unit="%"
+                    percentage={tank.dissolvedOxygen}
+                    color={colors.success}
+                  />
+                  <MetricOrbCard
+                    icon={<Sparkles size={20} color={colors.electricBlue} />}
+                    label="Water Quality"
+                    value={`${Math.round(tank.quality * 100)}`}
+                    unit="%"
+                    percentage={tank.quality}
+                    color={colors.electricBlue}
+                  />
+                  <MetricOrbCard
+                    icon={<Activity size={20} color={colors.aqua} />}
+                    label="Tank Health"
+                    value={`${Math.round(tank.health * 100)}`}
+                    unit="%"
+                    percentage={tank.health}
+                    color={colors.aqua}
+                  />
+                  {/* Device health */}
+                  {device && (
+                    <GlassSurface borderRadius={12} className="flex flex-col items-center gap-2 p-4 text-center">
+                      <div
+                        className="flex h-9 w-9 items-center justify-center rounded-full"
+                        style={{ backgroundColor: `${colors.cyan}22`, border: `1px solid ${colors.cyan}44` }}
+                      >
+                        <Cpu size={16} color={colors.cyan} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wide" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+                          Sensor
+                        </p>
+                        <p className="text-sm font-bold" style={{ color: colors.cyan, fontFamily: 'var(--font-heading)' }}>
+                          {device.healthScore ?? 0}%
+                        </p>
+                        <p className="text-[10px]" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+                          health
+                        </p>
+                      </div>
+                    </GlassSurface>
+                  )}
+                </div>
+              </Reveal>
+
+              <Reveal index={1}>
+                <SectionHeader title="7-Day Level Trend" />
+                <HistoryBarChart data={levelHistory} color={meta.accent} />
+              </Reveal>
+            </>
+          ) : (
+            <Reveal index={0}>
+              <GlassSurface borderRadius={12} className="flex h-full min-h-64 flex-col items-center justify-center gap-3 p-10 text-center">
+                <span
+                  className="flex h-14 w-14 items-center justify-center rounded-full"
+                  style={{ backgroundColor: colors.glassFill, border: `1px solid ${colors.glassBorder}` }}
+                >
+                  <Cpu size={24} color={colors.textTertiary} />
+                </span>
+                <p className="text-base font-semibold" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
+                  No sensor connected
+                </p>
+                <p className="max-w-xs text-sm" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+                  Connect an IoT sensor to start seeing live water level, temperature, pH and quality readings.
+                </p>
+                <LiquidButton
+                  label="Connect a Sensor"
+                  variant="primary"
+                  icon={<Cpu size={16} color={colors.textInverse} />}
+                  onClick={() => navigate('/devices/add')}
                 />
-              )}
-              <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-                {device ? `Live · ${tank.lastUpdated}` : tank.lastUpdated}
-              </p>
-            </div>
-          </div>
-        </GlassSurface>
-      </motion.div>
-
-      {tank.connected ? (
-        <>
-          {/* Live readings */}
-          <Reveal index={1} className="mb-8">
-            <SectionHeader title="Live Readings" />
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <MetricOrbCard
-                icon={<Thermometer size={22} color={colors.warning} />}
-                label="Temperature"
-                value={tank.temperature.toFixed(1)}
-                unit="°C"
-                percentage={tank.temperature / 40}
-                color={colors.warning}
-              />
-              <MetricOrbCard
-                icon={<FlaskConical size={22} color={colors.seafoam} />}
-                label="pH Level"
-                value={tank.ph.toFixed(1)}
-                percentage={tank.ph / 14}
-                color={colors.seafoam}
-              />
-              <MetricOrbCard
-                icon={<Leaf size={22} color={colors.success} />}
-                label="Dissolved O₂"
-                value={`${Math.round(tank.dissolvedOxygen * 100)}`}
-                unit="%"
-                percentage={tank.dissolvedOxygen}
-                color={colors.success}
-              />
-              <MetricOrbCard
-                icon={<Sparkles size={22} color={colors.electricBlue} />}
-                label="Water Quality"
-                value={`${Math.round(tank.quality * 100)}`}
-                unit="%"
-                percentage={tank.quality}
-                color={colors.electricBlue}
-              />
-              <MetricOrbCard
-                icon={<Activity size={22} color={colors.aqua} />}
-                label="Tank Health"
-                value={`${Math.round(tank.health * 100)}`}
-                unit="%"
-                percentage={tank.health}
-                color={colors.aqua}
-              />
-            </div>
-          </Reveal>
-
-          {/* History */}
-          <Reveal index={2} className="mb-8">
-            <SectionHeader title="7-Day Level Trend" />
-            <HistoryBarChart data={levelHistory} color={meta.accent} />
-          </Reveal>
-        </>
-      ) : (
-        <Reveal index={1} className="mb-8">
-          <SectionHeader title="Live Readings" />
-          <GlassSurface borderRadius={radius.xl} className="flex flex-col items-center gap-2 p-8 text-center">
-            <span
-              className="mb-1 flex h-12 w-12 items-center justify-center rounded-full"
-              style={{ backgroundColor: colors.glassFill, border: `1px solid ${colors.glassBorder}` }}
-            >
-              <Cpu size={20} color={colors.textTertiary} />
-            </span>
-            <p className="text-sm font-semibold" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
-              No sensor connected
-            </p>
-            <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-              Connect an IoT sensor to this tank to see live water level, temperature, pH and other readings.
-            </p>
-          </GlassSurface>
-        </Reveal>
-      )}
-
-      {/* Actions */}
-      <Reveal index={3} className="mb-10 flex flex-col gap-3">
-        {!device && (
-          <LiquidButton
-            label="Connect a Device"
-            variant="primary"
-            icon={<Cpu size={18} color={colors.textInverse} />}
-            onClick={() => navigate(`/devices/add?tankId=${id}`)}
-            fullWidth
-          />
-        )}
-        <LiquidButton
-          label="View Analytics"
-          variant={device ? 'primary' : 'ghost'}
-          icon={<BarChart3 size={18} color={device ? colors.textInverse : colors.textPrimary} />}
-          onClick={() => navigate('/analytics')}
-          fullWidth
-        />
-        <LiquidButton
-          label="Schedule Maintenance"
-          variant="ghost"
-          icon={<Wrench size={18} color={colors.textPrimary} />}
-          onClick={() => {}}
-          fullWidth
-        />
-      </Reveal>
+              </GlassSurface>
+            </Reveal>
+          )}
+        </div>
+      </div>
 
       <ActionSheet
         open={menuOpen}
