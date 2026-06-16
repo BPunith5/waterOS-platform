@@ -2,7 +2,6 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { TanksService } from '../tanks/tanks.service';
-import { SimulationService } from '../simulation/simulation.service';
 import { generateActivationPin, generateDeviceId, generateQrCode, generateSecretKey } from './device.utils';
 import { ConnectDeviceDto } from './dto/connect-device.dto';
 import { CreateDeviceDto } from './dto/create-device.dto';
@@ -14,7 +13,6 @@ export class DevicesService {
   constructor(
     @InjectModel(Device.name) private readonly deviceModel: Model<Device>,
     private readonly tanksService: TanksService,
-    private readonly simulationService: SimulationService,
   ) {}
 
   async register(userId: Types.ObjectId, dto: CreateDeviceDto): Promise<DeviceDocument> {
@@ -72,7 +70,6 @@ export class DevicesService {
     device.lastSeen = new Date();
     await device.save();
 
-    this.simulationService.start(device.deviceId);
     return device;
   }
 }
