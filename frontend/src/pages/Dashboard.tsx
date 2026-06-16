@@ -27,7 +27,7 @@ const networkMeta: Record<NetworkStatus, { label: string; color: string; icon: t
   nominal:  { label: 'All Systems Nominal',  color: colors.success,      icon: CheckCircle2 },
   degraded: { label: 'Partially Degraded',   color: colors.warning,      icon: Activity },
   critical: { label: 'Attention Required',   color: colors.danger,       icon: AlertOctagon },
-  offline:  { label: 'No Devices Online',    color: colors.textTertiary, icon: Wifi },
+  offline:  { label: 'No Sensors Online',    color: colors.textTertiary, icon: Wifi },
 };
 
 export function DashboardPage() {
@@ -377,7 +377,7 @@ export function DashboardPage() {
               <div className="grid grid-cols-2 gap-2">
                 <SparkCard label="Water Level"   data={sparkWaterLevel} color={colors.cyan}          format={(v) => `${Math.round(v * 100)}%`} />
                 <SparkCard label="Water Quality" data={sparkQuality}    color={colors.success}       format={(v) => `${Math.round(v * 100)}%`} />
-                <SparkCard label="Device Health" data={sparkHealth}     color={colors.electricBlue}  format={(v) => `${Math.round(v * 100)}%`} />
+                <SparkCard label="Sensor Health" data={sparkHealth}     color={colors.electricBlue}  format={(v) => `${Math.round(v * 100)}%`} />
                 <SparkCard label="Temperature"   data={sparkTemp}       color={colors.warning}       format={(v) => `${(v * 40).toFixed(1)}°C`} />
               </div>
             </div>

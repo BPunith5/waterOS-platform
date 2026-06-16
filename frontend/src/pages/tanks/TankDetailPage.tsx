@@ -262,7 +262,7 @@ export function TankDetailPage() {
                 <div className="flex justify-around gap-2">
                   <ScoreGauge label="Tank" value={Math.round(tank.health * 100)} color={tank.health >= 0.7 ? colors.success : tank.health >= 0.4 ? colors.warning : colors.danger} />
                   <ScoreGauge label="Quality" value={Math.round(tank.quality * 100)} color={tank.quality >= 0.7 ? colors.success : tank.quality >= 0.4 ? colors.warning : colors.danger} />
-                  {device && <ScoreGauge label="Device" value={device.healthScore} color={device.healthScore >= 70 ? colors.success : device.healthScore >= 40 ? colors.warning : colors.danger} />}
+                  {device && <ScoreGauge label="Sensor" value={device.healthScore} color={device.healthScore >= 70 ? colors.success : device.healthScore >= 40 ? colors.warning : colors.danger} />}
                 </div>
               </GlassSurface>
             </Reveal>

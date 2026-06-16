@@ -88,7 +88,7 @@ export function AnalyticsPage() {
           <StatCard icon={Droplet} value={summary.avgWaterLevel != null ? `${Math.round(summary.avgWaterLevel * 100)}%` : '—'} label="Avg Water Level" color={colors.cyan} />
           <StatCard icon={Sparkles} value={summary.avgQuality != null ? `${Math.round(summary.avgQuality * 100)}%` : '—'} label="Avg Quality" color={colors.electricBlue} />
           <StatCard icon={Thermometer} value={summary.avgTemperature != null ? `${summary.avgTemperature.toFixed(1)}°C` : '—'} label="Avg Temperature" color={colors.warning} />
-          <StatCard icon={TrendingUp} value={`${Math.round(summary.deviceUptimePercent)}%`} label="Device Uptime" color={colors.success} />
+          <StatCard icon={TrendingUp} value={`${Math.round(summary.deviceUptimePercent)}%`} label="Sensor Uptime" color={colors.success} />
         </div>
       )}
       {loading && (
@@ -195,7 +195,7 @@ export function AnalyticsPage() {
 
               {/* Device Performance: Battery + Signal */}
               <div>
-                <SectionHeader title="Device Performance" />
+                <SectionHeader title="Sensor Performance" />
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <TrendChart
                     data={batteryData}
@@ -251,7 +251,7 @@ export function AnalyticsPage() {
               <MetricOrbCard icon={<Sparkles size={20} color={colors.electricBlue} />} label="Avg Quality" value={summary.avgQuality != null ? `${Math.round(summary.avgQuality * 100)}` : '—'} unit="%" percentage={summary.avgQuality ?? 0} color={colors.electricBlue} />
               <MetricOrbCard icon={<Thermometer size={20} color={colors.warning} />} label="Avg Temperature" value={summary.avgTemperature != null ? summary.avgTemperature.toFixed(1) : '—'} unit="°C" percentage={(summary.avgTemperature ?? 0) / 40} color={colors.warning} />
               <MetricOrbCard icon={<FlaskConical size={20} color={colors.seafoam} />} label="Avg pH" value={summary.avgPh != null ? summary.avgPh.toFixed(1) : '—'} percentage={(summary.avgPh ?? 0) / 14} color={colors.seafoam} />
-              <MetricOrbCard icon={<Activity size={20} color={colors.success} />} label="Device Uptime" value={`${Math.round(summary.deviceUptimePercent)}`} unit="%" percentage={summary.deviceUptimePercent / 100} color={colors.success} />
+              <MetricOrbCard icon={<Activity size={20} color={colors.success} />} label="Sensor Uptime" value={`${Math.round(summary.deviceUptimePercent)}`} unit="%" percentage={summary.deviceUptimePercent / 100} color={colors.success} />
             </>
           ) : null}
 
