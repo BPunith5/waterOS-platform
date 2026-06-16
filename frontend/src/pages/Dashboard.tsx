@@ -1,21 +1,32 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, Bell, Cpu, Droplet, Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Activity, AlertOctagon, Bell, CheckCircle2, Cpu, Droplet, Plus, TrendingDown, TrendingUp, Wifi } from 'lucide-react';
 import { AlertCard } from '@/components/alerts/AlertCard';
 import { GlassSurface } from '@/components/glass/GlassSurface';
 import { Skeleton } from '@/components/glass/Skeleton';
 import { LiquidButton } from '@/components/glass/LiquidButton';
 import { Reveal } from '@/components/glass/Reveal';
 import { SectionHeader } from '@/components/glass/SectionHeader';
-import { StatCard } from '@/components/glass/StatCard';
+import { LiquidGauge } from '@/components/water/LiquidGauge';
+import { Sparkline } from '@/components/water/Sparkline';
 import { TankGridCard } from '@/components/water/TankGridCard';
 import { useAuth } from '@/context/AuthContext';
 import { useAlertUpdates, useDeviceUpdates, useTanksSubscription } from '@/context/SocketContext';
-import { api, type AlertRecord, type DeviceRecord, type DeviceUpdatePayload } from '@/lib/api';
+import { api, type AlertRecord, type AnalyticsResponse, type DeviceRecord, type DeviceUpdatePayload } from '@/lib/api';
 import { mergeLiveTank } from '@/lib/live';
 import { toDisplayTank } from '@/lib/placeholder';
 import { colors } from '@/theme/tokens';
 import type { Tank } from '@/types';
+
+type NetworkStatus = 'nominal' | 'degraded' | 'critical' | 'offline';
+
+const networkMeta: Record<NetworkStatus, { label: string; color: string; icon: typeof CheckCircle2 }> = {
+  nominal: { label: 'All Systems Nominal', color: colors.success, icon: CheckCircle2 },
+  degraded: { label: 'Partially Degraded', color: colors.warning, icon: Activity },
+  critical: { label: 'Attention Required', color: colors.danger, icon: AlertOctagon },
+  offline: { label: 'No Devices Online', color: colors.textTertiary, icon: Wifi },
+};
 
 export function DashboardPage() {
   const { user } = useAuth();
@@ -24,6 +35,7 @@ export function DashboardPage() {
   const [tanks, setTanks] = useState<Tank[]>([]);
   const [devices, setDevices] = useState<DeviceRecord[]>([]);
   const [alerts, setAlerts] = useState<AlertRecord[]>([]);
+  const [analytics, setAnalytics] = useState<AnalyticsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const lastLevelsRef = useRef<Map<string, number | null>>(new Map());
 
@@ -46,9 +58,7 @@ export function DashboardPage() {
                 lastLevelsRef.current.set(record._id, logs[0].waterLevel);
                 displayTank = mergeLiveTank(displayTank, match, logs[0]);
               }
-            } catch {
-              // live data unavailable
-            }
+            } catch { /* live data unavailable */ }
           }
           return displayTank;
         }),
@@ -58,6 +68,11 @@ export function DashboardPage() {
       setAlerts(alertRecords);
       setTanks(displayTanks);
       setLoading(false);
+
+      try {
+        const analyticsData = await api.analytics.get('7D');
+        setAnalytics(analyticsData);
+      } catch { /* non-critical */ }
     })();
   }, []);
 
@@ -76,32 +91,47 @@ export function DashboardPage() {
     );
     setDevices((prev) => prev.map((d) => (d._id === payload.device._id ? payload.device : d)));
   }, []);
-
   useDeviceUpdates(handleDeviceUpdate);
 
   const handleNewAlert = useCallback((alert: AlertRecord) => {
     setAlerts((prev) => [alert, ...prev.filter((a) => a._id !== alert._id)]);
   }, []);
-
   useAlertUpdates(handleNewAlert);
 
   async function markRead(id: string) {
     setAlerts((prev) => prev.map((a) => (a._id === id ? { ...a, read: true } : a)));
-    try {
-      await api.alerts.markRead(id, true);
-    } catch {
-      setAlerts((prev) => prev.map((a) => (a._id === id ? { ...a, read: false } : a)));
-    }
+    try { await api.alerts.markRead(id, true); }
+    catch { setAlerts((prev) => prev.map((a) => (a._id === id ? { ...a, read: false } : a))); }
   }
 
-  const activeDevices = devices.filter((d) => d.status === 'active').length;
-  const unreadAlerts = alerts.filter((a) => !a.read);
-  const recentAlerts = (unreadAlerts.length > 0 ? unreadAlerts : alerts).slice(0, 5);
   const connectedTanks = tanks.filter((t) => t.connected);
-  const avgQuality =
-    connectedTanks.length > 0
-      ? Math.round((connectedTanks.reduce((s, t) => s + t.quality, 0) / connectedTanks.length) * 100)
-      : null;
+  const activeDevices = devices.filter((d) => d.status === 'active');
+  const criticalAlerts = alerts.filter((a) => a.severity === 'critical' && !a.read);
+  const unreadAlerts = alerts.filter((a) => !a.read);
+
+  const waterHealth = connectedTanks.length > 0
+    ? Math.round((connectedTanks.reduce((s, t) => s + t.quality, 0) / connectedTanks.length) * 100)
+    : 0;
+
+  const systemHealth = activeDevices.length > 0
+    ? Math.round(activeDevices.reduce((s, d) => s + d.healthScore, 0) / activeDevices.length)
+    : 0;
+
+  const networkStatus: NetworkStatus = !devices.length
+    ? 'offline'
+    : criticalAlerts.length > 0
+      ? 'critical'
+      : devices.some((d) => d.status === 'offline')
+        ? 'degraded'
+        : 'nominal';
+
+  const netMeta = networkMeta[networkStatus];
+  const NetIcon = netMeta.icon;
+
+  const sparkWaterLevel = analytics?.series.map((p) => p.waterLevel) ?? [];
+  const sparkQuality = analytics?.series.map((p) => p.quality) ?? [];
+  const sparkDeviceHealth = analytics?.series.map((p) => (p.battery + p.signal) / 200) ?? [];
+  const sparkTemp = analytics?.series.map((p) => p.temperature / 40) ?? [];
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -112,17 +142,14 @@ export function DashboardPage() {
 
   return (
     <div className="w-full">
-      {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+      {/* ── Page header ─────────────────────────────────── */}
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1
-            className="text-2xl font-bold"
-            style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}
-          >
+          <h1 className="text-2xl font-bold" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
             {greeting}{user?.name ? `, ${user.name}` : ''}
           </h1>
           <p className="mt-0.5 text-sm" style={{ color: colors.textSecondary, fontFamily: 'var(--font-body)' }}>
-            {tanks.length} tank{tanks.length !== 1 ? 's' : ''} monitored · {activeDevices} sensor{activeDevices !== 1 ? 's' : ''} active
+            {tanks.length} tank{tanks.length !== 1 ? 's' : ''} · {activeDevices.length} active sensor{activeDevices.length !== 1 ? 's' : ''}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -151,72 +178,81 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Stat row ──────────────────────────────────────────── */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard icon={Droplet} value={`${tanks.length}`} label={`Tank${tanks.length !== 1 ? 's' : ''}`} color={colors.cyan} />
-        <StatCard icon={Cpu} value={`${activeDevices}`} label="Sensors Active" color={colors.success} />
-        <StatCard
-          icon={Bell}
-          value={`${unreadAlerts.length}`}
-          label="Active Alerts"
-          color={unreadAlerts.length > 0 ? colors.warning : colors.textTertiary}
-        />
-        <StatCard
-          icon={Activity}
-          value={avgQuality != null ? `${avgQuality}%` : '—'}
-          label="Avg Quality"
-          color={colors.aqua}
-        />
-      </div>
+      {/* ── Infrastructure Health Hero ───────────────────── */}
+      {loading ? (
+        <Skeleton className="mb-5 h-36" />
+      ) : (
+        <motion.div
+          className="mb-5"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', damping: 22, stiffness: 200 }}
+        >
+          <GlassSurface borderRadius={16} className="p-5" style={{ borderLeft: `3px solid ${netMeta.color}` }}>
+            <div className="flex flex-wrap items-center gap-5">
+              <div className="flex items-center gap-4">
+                <LiquidGauge
+                  size={88}
+                  percentage={waterHealth / 100}
+                  color={waterHealth >= 70 ? colors.success : waterHealth >= 40 ? colors.warning : colors.danger}
+                  value={`${waterHealth}`}
+                  unit="%"
+                  label="Water"
+                />
+                <div>
+                  <p className="text-xs uppercase tracking-widest" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+                    Infrastructure
+                  </p>
+                  <p className="text-xl font-bold" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
+                    Water Health
+                  </p>
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <NetIcon size={12} color={netMeta.color} />
+                    <span className="text-sm font-semibold" style={{ color: netMeta.color, fontFamily: 'var(--font-body)' }}>
+                      {netMeta.label}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-      {/* ── Main two-column grid ───────────────────────────────── */}
+              <div className="hidden h-14 w-px sm:block" style={{ backgroundColor: colors.glassBorder }} />
+
+              <div className="flex flex-1 flex-wrap gap-5">
+                <MiniStat label="System Health" value={`${systemHealth}%`} color={systemHealth >= 70 ? colors.success : systemHealth >= 40 ? colors.warning : colors.danger} icon={Cpu} />
+                <MiniStat label="Active Sensors" value={`${activeDevices.length}`} color={colors.cyan} icon={Wifi} />
+                <MiniStat label="Critical Alerts" value={`${criticalAlerts.length}`} color={criticalAlerts.length > 0 ? colors.danger : colors.textTertiary} icon={AlertOctagon} />
+                <MiniStat label="Connected Tanks" value={`${connectedTanks.length}/${tanks.length}`} color={colors.electricBlue} icon={Droplet} />
+              </div>
+            </div>
+          </GlassSurface>
+        </motion.div>
+      )}
+
+      {/* ── Main two-column grid ─────────────────────────── */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        {/* LEFT: Tank overview (2/3 of space on large screens) */}
+        {/* LEFT: Tank grid */}
         <div className="lg:col-span-2">
-          <div className="mb-3 flex items-center justify-between">
-            <SectionHeader title="Tank Overview" />
-            {tanks.length > 6 && (
-              <button
-                type="button"
-                onClick={() => navigate('/tanks')}
-                className="text-xs font-medium"
-                style={{ color: colors.cyan, fontFamily: 'var(--font-body)' }}
-              >
-                View all →
-              </button>
-            )}
-          </div>
+          <SectionHeader
+            title="Tank Overview"
+            actionLabel={tanks.length > 6 ? 'View all →' : undefined}
+            onAction={() => navigate('/tanks')}
+          />
 
           {loading ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {[0, 1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-44" />
-              ))}
+              {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-52" />)}
             </div>
           ) : tanks.length === 0 ? (
             <GlassSurface borderRadius={12} className="flex flex-col items-center gap-3 p-10 text-center">
-              <p
-                className="text-base font-semibold"
-                style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}
-              >
+              <p className="text-base font-semibold" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
                 No tanks yet
               </p>
               <p className="text-sm" style={{ color: colors.textSecondary, fontFamily: 'var(--font-body)' }}>
                 Add your first tank, then connect a sensor to start monitoring live data.
               </p>
               <div className="flex flex-wrap gap-2">
-                <LiquidButton
-                  label="Add Tank"
-                  variant="primary"
-                  icon={<Plus size={16} color={colors.textInverse} />}
-                  onClick={() => navigate('/tanks/new')}
-                />
-                <LiquidButton
-                  label="Connect Sensor"
-                  variant="glass"
-                  icon={<Cpu size={16} color={colors.textPrimary} />}
-                  onClick={() => navigate('/devices/add')}
-                />
+                <LiquidButton label="Add Tank" variant="primary" icon={<Plus size={16} color={colors.textInverse} />} onClick={() => navigate('/tanks/new')} />
+                <LiquidButton label="Connect Sensor" variant="glass" icon={<Cpu size={16} color={colors.textPrimary} />} onClick={() => navigate('/devices/add')} />
               </div>
             </GlassSurface>
           ) : (
@@ -230,72 +266,104 @@ export function DashboardPage() {
           )}
         </div>
 
-        {/* RIGHT: Alerts + quick actions (1/3 of space) */}
+        {/* RIGHT: Alerts + sparklines */}
         <div className="flex flex-col gap-5">
-          {/* Alert feed */}
           <div>
-            <div className="mb-3 flex items-center justify-between">
-              <SectionHeader title="Alert Feed" />
-              {alerts.length > 5 && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/alerts')}
-                  className="text-xs font-medium"
-                  style={{ color: colors.cyan, fontFamily: 'var(--font-body)' }}
-                >
-                  View all →
-                </button>
-              )}
-            </div>
-
+            <SectionHeader
+              title={criticalAlerts.length > 0 ? `Critical · ${criticalAlerts.length}` : 'Recent Alerts'}
+              actionLabel="All →"
+              onAction={() => navigate('/alerts')}
+            />
             {loading ? (
               <div className="flex flex-col gap-2">
-                {[0, 1, 2].map((i) => (
-                  <Skeleton key={i} className="h-20" />
-                ))}
+                {[0, 1].map((i) => <Skeleton key={i} className="h-20" />)}
               </div>
-            ) : recentAlerts.length === 0 ? (
-              <GlassSurface borderRadius={12} className="px-4 py-6 text-center">
-                <p className="text-sm" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-                  All clear — no active alerts
-                </p>
-              </GlassSurface>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {recentAlerts.map((alert, i) => (
-                  <Reveal key={alert._id} index={i}>
-                    <AlertCard
-                      alert={alert}
-                      onMarkRead={!alert.read ? () => markRead(alert._id) : undefined}
-                    />
-                  </Reveal>
-                ))}
-              </div>
-            )}
+            ) : (() => {
+              const shown = criticalAlerts.length > 0 ? criticalAlerts.slice(0, 3) : alerts.slice(0, 3);
+              if (!shown.length) {
+                return (
+                  <GlassSurface borderRadius={12} className="px-4 py-5 text-center">
+                    <p className="text-sm" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+                      All clear — no alerts
+                    </p>
+                  </GlassSurface>
+                );
+              }
+              return (
+                <div className="flex flex-col gap-2">
+                  {shown.map((alert, i) => (
+                    <Reveal key={alert._id} index={i}>
+                      <AlertCard alert={alert} onMarkRead={!alert.read ? () => markRead(alert._id) : undefined} />
+                    </Reveal>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
+
+          {/* 7-Day sparklines */}
+          {!loading && analytics && analytics.series.length > 0 && (
+            <div>
+              <SectionHeader title="7-Day Trends" actionLabel="Analytics →" onAction={() => navigate('/analytics')} />
+              <div className="grid grid-cols-2 gap-2">
+                <SparkCard label="Water Level" data={sparkWaterLevel} color={colors.cyan} format={(v) => `${Math.round(v * 100)}%`} />
+                <SparkCard label="Water Quality" data={sparkQuality} color={colors.success} format={(v) => `${Math.round(v * 100)}%`} />
+                <SparkCard label="Device Health" data={sparkDeviceHealth} color={colors.electricBlue} format={(v) => `${Math.round(v * 100)}%`} />
+                <SparkCard label="Temperature" data={sparkTemp} color={colors.warning} format={(v) => `${Math.round(v * 40)}°C`} />
+              </div>
+            </div>
+          )}
 
           {/* Quick actions */}
           <div>
             <SectionHeader title="Quick Actions" />
             <GlassSurface borderRadius={12} className="flex flex-col gap-2 p-3">
-              <LiquidButton
-                label="Add Tank"
-                variant="glass"
-                icon={<Plus size={16} color={colors.textPrimary} />}
-                fullWidth
-                onClick={() => navigate('/tanks/new')}
-              />
-              <LiquidButton
-                label="Connect Sensor"
-                variant="glass"
-                icon={<Cpu size={16} color={colors.textPrimary} />}
-                fullWidth
-                onClick={() => navigate('/devices/add')}
-              />
+              <LiquidButton label="Add Tank" variant="glass" icon={<Plus size={16} color={colors.textPrimary} />} fullWidth onClick={() => navigate('/tanks/new')} />
+              <LiquidButton label="Connect Sensor" variant="glass" icon={<Cpu size={16} color={colors.textPrimary} />} fullWidth onClick={() => navigate('/devices/add')} />
             </GlassSurface>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function MiniStat({ label, value, color, icon: Icon }: { label: string; value: string; color: string; icon: typeof Cpu }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}22`, border: `1px solid ${color}44` }}>
+        <Icon size={16} color={color} />
+      </div>
+      <div>
+        <p className="text-xl font-bold leading-none" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
+          {value}
+        </p>
+        <p className="mt-0.5 text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+          {label}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function SparkCard({ label, data, color, format }: { label: string; data: number[]; color: string; format: (v: number) => string }) {
+  const trend = data.length >= 2 ? data[data.length - 1] - data[0] : 0;
+  const last = data.length > 0 ? data[data.length - 1] : null;
+
+  return (
+    <GlassSurface borderRadius={10} className="flex flex-col gap-1 p-2.5">
+      <div className="flex items-center justify-between">
+        <p className="text-[9px] uppercase tracking-wide" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+          {label}
+        </p>
+        {trend >= 0 ? <TrendingUp size={9} color={colors.success} /> : <TrendingDown size={9} color={colors.danger} />}
+      </div>
+      <Sparkline data={data} color={color} width={100} height={26} trendColor />
+      {last !== null && (
+        <p className="text-sm font-bold leading-none" style={{ color, fontFamily: 'var(--font-heading)' }}>
+          {format(last)}
+        </p>
+      )}
+    </GlassSurface>
   );
 }
