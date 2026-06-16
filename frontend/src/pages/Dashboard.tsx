@@ -164,10 +164,10 @@ export function DashboardPage() {
             </button>
           )}
           <LiquidButton
-            label="Add Tank"
+            label="Add Sensor"
             variant="primary"
             icon={<Plus size={15} color={colors.textInverse} />}
-            onClick={() => navigate('/tanks/new')}
+            onClick={() => navigate('/devices/add')}
           />
         </div>
       </div>
@@ -292,8 +292,8 @@ export function DashboardPage() {
                 </p>
               </div>
               <div className="flex flex-wrap justify-center gap-2">
-                <LiquidButton label="Add Tank" variant="primary" icon={<Plus size={15} color={colors.textInverse} />} onClick={() => navigate('/tanks/new')} />
-                <LiquidButton label="Connect Sensor" variant="glass" icon={<Cpu size={15} color={colors.textPrimary} />} onClick={() => navigate('/devices/add')} />
+                <LiquidButton label="Add Sensor" variant="primary" icon={<Plus size={15} color={colors.textInverse} />} onClick={() => navigate('/devices/add')} />
+                <LiquidButton label="Add Tank Manually" variant="glass" icon={<Cpu size={15} color={colors.textPrimary} />} onClick={() => navigate('/tanks/new')} />
               </div>
             </div>
           ) : (
@@ -392,8 +392,8 @@ export function DashboardPage() {
               className="flex flex-col gap-2 rounded-2xl p-3"
               style={{ background: colors.glassFill, border: `1px solid ${colors.glassBorder}` }}
             >
-              <LiquidButton label="Add Tank" variant="glass" icon={<Plus size={15} color={colors.textPrimary} />} fullWidth onClick={() => navigate('/tanks/new')} />
-              <LiquidButton label="Connect Sensor" variant="glass" icon={<Cpu size={15} color={colors.textPrimary} />} fullWidth onClick={() => navigate('/devices/add')} />
+              <LiquidButton label="Add Sensor" variant="primary" icon={<Plus size={15} color={colors.textInverse} />} fullWidth onClick={() => navigate('/devices/add')} />
+              <LiquidButton label="Add Tank Manually" variant="glass" icon={<Cpu size={15} color={colors.textPrimary} />} fullWidth onClick={() => navigate('/tanks/new')} />
             </div>
           </div>
         </div>

@@ -106,10 +106,10 @@ export function TanksPage() {
             ))}
           </div>
           <LiquidButton
-            label="Add Tank"
+            label="Add Sensor"
             variant="primary"
             icon={<Plus size={16} color={colors.textInverse} />}
-            onClick={() => navigate('/tanks/new')}
+            onClick={() => navigate('/devices/add')}
           />
         </div>
       </div>
@@ -140,10 +140,10 @@ export function TanksPage() {
             {tanks.length === 0 ? 'No tanks yet' : 'No tanks match this filter'}
           </p>
           <p className="text-sm" style={{ color: colors.textSecondary, fontFamily: 'var(--font-body)' }}>
-            {tanks.length === 0 ? 'Add your first tank to start monitoring.' : 'Try a different tank type filter.'}
+            {tanks.length === 0 ? 'Connect a sensor to start monitoring your first tank.' : 'Try a different tank type filter.'}
           </p>
           {tanks.length === 0 && (
-            <LiquidButton label="Add Tank" variant="primary" icon={<Plus size={16} color={colors.textInverse} />} onClick={() => navigate('/tanks/new')} />
+            <LiquidButton label="Add Sensor" variant="primary" icon={<Plus size={16} color={colors.textInverse} />} onClick={() => navigate('/devices/add')} />
           )}
         </GlassSurface>
       ) : view === 'grid' ? (
