@@ -37,7 +37,7 @@ export function DeviceCard({ device, tankName, gpsAvailable = false, onClick, on
 
   return (
     <PressableScale onClick={onClick} scaleTo={0.985} className="w-full">
-      <GlassSurface interactive className="p-4">
+      <GlassSurface interactive className="p-4 transition-shadow duration-200 hover:shadow-[0_0_20px_rgba(59,130,246,0.12)]">
         <div className="flex gap-4">
           <div className="relative shrink-0">
             <LiquidGauge

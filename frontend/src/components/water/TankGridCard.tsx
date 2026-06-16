@@ -30,7 +30,7 @@ export function TankGridCard({ tank, onClick }: Props) {
   return (
     <PressableScale onClick={onClick} className="w-full">
       <div
-        className="relative flex flex-col gap-2.5 overflow-hidden rounded-2xl p-3 transition-all duration-200"
+        className="glass-interactive relative flex flex-col gap-2.5 overflow-hidden rounded-2xl p-3"
         style={{
           background: 'rgba(255,255,255,0.06)',
           backdropFilter: 'blur(16px)',

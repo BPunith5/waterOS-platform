@@ -192,10 +192,15 @@ export function DashboardPage() {
               boxShadow: `0 0 40px ${netMeta.color}15, inset 0 1px 0 rgba(255,255,255,0.1)`,
             }}
           >
-            {/* Background glow */}
+            {/* Background glow — left */}
             <div
               className="pointer-events-none absolute inset-0"
-              style={{ background: `radial-gradient(ellipse at 10% 50%, ${netMeta.color}12, transparent 60%)` }}
+              style={{ background: `radial-gradient(ellipse at 10% 50%, ${netMeta.color}16, transparent 55%)` }}
+            />
+            {/* Background glow — top-right accent */}
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{ background: `radial-gradient(ellipse at 90% 0%, ${colors.cyan}0A, transparent 50%)` }}
             />
 
             <div className="relative flex flex-wrap items-center gap-6">
