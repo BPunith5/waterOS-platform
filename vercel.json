@@ -1,0 +1,10 @@
+{
+  "experimentalServices": {
+    "backend": {
+      "root": "backend",
+      "entrypoint": "src/main.ts",
+      "routePrefix": "/",
+      "buildCommand": "npm run build"
+    }
+  }
+}
