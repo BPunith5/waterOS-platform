@@ -15,7 +15,7 @@ export function PressableScale({
   onClick,
   className,
   style,
-  scaleTo = 0.96,
+  scaleTo = 0.97,
 }: PressableScaleProps) {
   return (
     <motion.div
@@ -23,7 +23,7 @@ export function PressableScale({
       className={className}
       style={{ cursor: onClick ? 'pointer' : undefined, ...style }}
       whileTap={{ scale: scaleTo }}
-      transition={{ type: 'spring', damping: 16, stiffness: 320 }}
+      transition={{ type: 'spring', damping: 20, stiffness: 90 }}
     >
       {children}
     </motion.div>

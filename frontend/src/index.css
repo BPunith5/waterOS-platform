@@ -46,6 +46,8 @@
   --glass-highlight: rgba(255, 255, 255, 0.5);
   --text-secondary: rgba(244, 251, 255, 0.68);
   --text-tertiary: rgba(244, 251, 255, 0.42);
+  /* Premium easing from cinematic dark style guide */
+  --ease-expo-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 * {
@@ -107,7 +109,7 @@ textarea::placeholder {
 
 /* Glass surface hover lift, for interactive cards/rows */
 .glass-interactive {
-  transition: transform 0.22s ease, box-shadow 0.22s ease, background-image 0.22s ease;
+  transition: transform 0.22s var(--ease-expo-out), box-shadow 0.22s var(--ease-expo-out), background-image 0.22s ease;
 }
 
 .glass-interactive:hover {
@@ -206,4 +208,23 @@ textarea::placeholder {
 ::selection {
   background: rgba(34, 211, 238, 0.25);
   color: var(--color-text-primary);
+}
+
+/* ── Live status dot pulse (for active/online sensors & tanks) ── */
+@keyframes status-dot-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 currentColor; }
+  50% { opacity: 0.85; box-shadow: 0 0 0 4px transparent; }
+}
+
+.status-dot-live {
+  animation: status-dot-pulse 2s var(--ease-expo-out) infinite;
+}
+
+/* ── Respect reduced-motion preference ── */
+@media (prefers-reduced-motion: reduce) {
+  .status-dot-live { animation: none; }
+  .glass-interactive { transition: none; }
+  .glass-shimmer::after { animation: none; }
+  .aurora-blob { animation: none !important; }
+  .device-marker-pulse { animation: none; }
 }

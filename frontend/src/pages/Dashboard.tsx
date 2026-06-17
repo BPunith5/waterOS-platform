@@ -151,7 +151,8 @@ export function DashboardPage() {
             <button
               type="button"
               onClick={() => navigate('/alerts')}
-              className="relative flex h-10 w-10 items-center justify-center rounded-xl transition-all hover:scale-105"
+              aria-label={`View ${unreadAlerts.length} unread alert${unreadAlerts.length !== 1 ? 's' : ''}`}
+              className="relative flex h-11 w-11 items-center justify-center rounded-xl transition-all hover:scale-105"
               style={{ backgroundColor: `${colors.warning}18`, border: `1px solid ${colors.warning}44` }}
             >
               <Bell size={18} color={colors.warning} />
@@ -192,15 +193,18 @@ export function DashboardPage() {
               boxShadow: `0 0 40px ${netMeta.color}15, inset 0 1px 0 rgba(255,255,255,0.1)`,
             }}
           >
-            {/* Background glow — left */}
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{ background: `radial-gradient(ellipse at 10% 50%, ${netMeta.color}16, transparent 55%)` }}
+            {/* Animated aurora blobs */}
+            <motion.div
+              className="pointer-events-none absolute"
+              style={{ inset: '-20%', background: `radial-gradient(ellipse 60% 50% at 15% 55%, ${netMeta.color}14, transparent 65%)` }}
+              animate={{ x: [0, 18, 0], y: [0, -10, 0] }}
+              transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
             />
-            {/* Background glow — top-right accent */}
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{ background: `radial-gradient(ellipse at 90% 0%, ${colors.cyan}0A, transparent 50%)` }}
+            <motion.div
+              className="pointer-events-none absolute"
+              style={{ inset: '-20%', background: `radial-gradient(ellipse 50% 40% at 88% 10%, ${colors.cyan}0C, transparent 55%)` }}
+              animate={{ x: [0, -14, 0], y: [0, 12, 0] }}
+              transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
             />
 
             <div className="relative flex flex-wrap items-center gap-6">
@@ -228,6 +232,12 @@ export function DashboardPage() {
                     <span className="text-sm font-semibold" style={{ color: netMeta.color, fontFamily: 'var(--font-body)' }}>
                       {netMeta.label}
                     </span>
+                    {networkStatus !== 'offline' && (
+                      <span className="inline-flex items-center gap-1 rounded-pill border px-1.5 py-0.5" style={{ backgroundColor: `${colors.success}14`, borderColor: `${colors.success}40` }}>
+                        <span className="status-dot-live h-1.5 w-1.5 rounded-full" style={{ backgroundColor: colors.success, color: colors.success }} />
+                        <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: colors.success, fontFamily: 'var(--font-body)' }}>Live</span>
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

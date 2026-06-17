@@ -74,7 +74,10 @@ export function DeviceCard({ device, tankName, gpsAvailable = false, onClick, on
                   className="inline-flex items-center gap-1.5 rounded-pill border px-2.5 py-1"
                   style={{ backgroundColor: `${status.color}22`, borderColor: `${status.color}55` }}
                 >
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: status.color }} />
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full${device.status === 'active' ? ' status-dot-live' : ''}`}
+                    style={{ backgroundColor: status.color, color: status.color }}
+                  />
                   <span className="text-xs font-semibold" style={{ color: status.color, fontFamily: 'var(--font-body)' }}>
                     {status.label}
                   </span>

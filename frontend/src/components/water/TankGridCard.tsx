@@ -53,7 +53,10 @@ export function TankGridCard({ tank, onClick }: Props) {
           >
             {meta.label}
           </span>
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: sColor, boxShadow: `0 0 6px ${sColor}` }} />
+          <span
+            className={`h-2 w-2 rounded-full${tank.connected && tank.status === 'optimal' ? ' status-dot-live' : ''}`}
+            style={{ backgroundColor: sColor, boxShadow: `0 0 6px ${sColor}`, color: sColor }}
+          />
         </div>
 
         {/* Vessel */}
