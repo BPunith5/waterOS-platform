@@ -26,7 +26,7 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      navigate('/', { replace: true });
+      navigate('/app', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to sign in');
     } finally {

@@ -41,7 +41,7 @@ export function SignupPage() {
     setSubmitting(true);
     try {
       await register(name, email, password);
-      navigate('/', { replace: true });
+      navigate('/app', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to create account');
     } finally {

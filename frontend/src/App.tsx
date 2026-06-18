@@ -6,6 +6,7 @@ import { ProtectedRoute } from './routes/ProtectedRoute';
 import { AppShell } from './layouts/AppShell';
 import { LoginPage } from './pages/auth/Login';
 import { SignupPage } from './pages/auth/Signup';
+import { LandingPage } from './pages/landing/LandingPage';
 import { DashboardPage } from './pages/Dashboard';
 import { TanksPage } from './pages/tanks/TanksPage';
 import { TankFormPage } from './pages/tanks/TankFormPage';
@@ -26,12 +27,13 @@ function App() {
         <SocketProvider>
           <OceanThemeProvider>
             <Routes>
+              <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/dev-preview" element={<DevPreviewPage />} />
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppShell />}>
-                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/app" element={<DashboardPage />} />
                   <Route path="/tanks" element={<TanksPage />} />
                   <Route path="/tanks/new" element={<TankFormPage mode="create" />} />
                   <Route path="/tanks/:id" element={<TankDetailPage />} />
@@ -45,7 +47,7 @@ function App() {
                   <Route path="/map" element={<MapPage />} />
                 </Route>
               </Route>
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Navigate to="/app" replace />} />
             </Routes>
           </OceanThemeProvider>
         </SocketProvider>
