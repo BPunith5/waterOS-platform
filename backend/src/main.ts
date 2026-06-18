@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -15,6 +16,21 @@ async function bootstrap() {
   );
 
   app.setGlobalPrefix('api');
+
+  const config = new DocumentBuilder()
+    .setTitle('WaterOS API')
+    .setDescription(
+      'REST + WebSocket API for the WaterOS IoT water monitoring platform. ' +
+      'Most endpoints require a Bearer JWT (obtain via POST /api/auth/login). ' +
+      'The telemetry ingestion endpoint (POST /api/iot/:deviceId) authenticates via a per-device secret key passed as the `key` query parameter.',
+    )
+    .setVersion('1.0')
+    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'JWT')
+    .addApiKey({ type: 'apiKey', in: 'query', name: 'key' }, 'DeviceKey')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document);
 
   await app.listen(process.env.PORT ?? 5000);
 }
