@@ -14,10 +14,10 @@ export class Alert {
   @Prop({ type: Types.ObjectId, ref: 'Device', required: true, index: true })
   deviceId: Types.ObjectId;
 
-  @Prop({ enum: ALERT_TYPES, required: true })
+  @Prop({ type: String, enum: ALERT_TYPES, required: true })
   type: AlertType;
 
-  @Prop({ enum: ALERT_SEVERITIES, required: true })
+  @Prop({ type: String, enum: ALERT_SEVERITIES, required: true })
   severity: AlertSeverity;
 
   @Prop({ required: true })

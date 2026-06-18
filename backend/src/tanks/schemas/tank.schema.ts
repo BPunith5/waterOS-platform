@@ -12,7 +12,7 @@ export class Tank {
   @Prop({ required: true, trim: true })
   tankName: string;
 
-  @Prop({ required: true, enum: TANK_TYPES })
+  @Prop({ type: String, required: true, enum: TANK_TYPES })
   tankType: TankType;
 
   @Prop({ required: true, min: 0 })

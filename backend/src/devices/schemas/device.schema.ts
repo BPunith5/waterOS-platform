@@ -21,7 +21,7 @@ export class Device {
   @Prop({ type: Types.ObjectId, ref: 'Tank', default: null, index: true })
   tankId: Types.ObjectId | null;
 
-  @Prop({ enum: DEVICE_STATUSES, default: 'pending' })
+  @Prop({ type: String, enum: DEVICE_STATUSES, default: 'pending' })
   status: DeviceStatus;
 
   @Prop({ default: 100 })
@@ -45,7 +45,7 @@ export class Device {
   @Prop({ default: 100 })
   healthScore: number;
 
-  @Prop({ enum: HEALTH_LEVELS, default: 'healthy' })
+  @Prop({ type: String, enum: HEALTH_LEVELS, default: 'healthy' })
   healthLevel: HealthLevel;
 }
 
