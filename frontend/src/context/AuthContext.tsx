@@ -5,7 +5,7 @@ type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthUser>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
 };
@@ -37,10 +37,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function login(email: string, password: string) {
+  async function login(email: string, password: string): Promise<AuthUser> {
     const { token, user } = await api.auth.login({ email, password });
     setToken(token);
     setUser(user);
+    return user;
   }
 
   async function register(name: string, email: string, password: string) {

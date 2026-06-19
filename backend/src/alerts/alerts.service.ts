@@ -9,7 +9,7 @@ import { Alert, AlertDocument } from './schemas/alert.schema';
 import { ALERT_DEDUP_WINDOW_MS, AlertSeverity, AlertType, OFFLINE_MINUTES } from './alert-thresholds';
 
 type CreateAlertInput = {
-  userId: Types.ObjectId;
+  userId: Types.ObjectId | null;
   tankId?: Types.ObjectId | null;
   deviceRef: Types.ObjectId;
   deviceId: string;
@@ -57,20 +57,28 @@ export class AlertsService {
     for (const device of devices) {
       device.status = 'offline';
       await device.save();
-      await this.createAlert({
-        userId: device.userId,
-        tankId: device.tankId,
-        deviceRef: device._id,
-        deviceId: device.deviceId,
-        type: 'device_offline',
-        severity: 'warning',
-        title: 'Device offline',
-        description: `${device.deviceName} has not reported in over ${OFFLINE_MINUTES} minutes.`,
-      });
+      if (device.userId) {
+        await this.createAlert({
+          userId: device.userId,
+          tankId: device.tankId,
+          deviceRef: device._id,
+          deviceId: device.deviceId,
+          type: 'device_offline',
+          severity: 'warning',
+          title: 'Device offline',
+          description: `${device.deviceName} has not reported in over ${OFFLINE_MINUTES} minutes.`,
+        });
+      }
+      for (const adminId of device.assignedAdminIds ?? []) {
+        this.realtimeGateway.emitAdminDeviceOffline(adminId.toString(), device.deviceId, device.deviceName);
+      }
     }
   }
 
   async createAlert(input: CreateAlertInput): Promise<AlertDocument | null> {
+    // Skip alert creation for devices without an owner (provisioned, unclaimed)
+    if (!input.userId) return null;
+
     const recent = await this.alertModel
       .findOne({
         deviceId: input.deviceRef,

@@ -50,6 +50,15 @@ export class Telemetry {
 
   @Prop({ default: Date.now, index: true })
   timestamp: Date;
+
+  @Prop({ type: String, enum: ['hardware', 'manual'], default: 'hardware' })
+  source: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
+  pushedBy: Types.ObjectId | null;
+
+  @Prop({ type: String, default: null })
+  note: string | null;
 }
 
 export type TelemetryDocument = HydratedDocument<Telemetry>;

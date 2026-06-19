@@ -13,6 +13,9 @@ export class User {
   @Prop({ required: true, minlength: 6, select: false })
   password: string;
 
+  @Prop({ type: String, enum: ['user', 'admin', 'superadmin'], default: 'user' })
+  role: string;
+
   comparePassword: (candidate: string) => Promise<boolean>;
 }
 

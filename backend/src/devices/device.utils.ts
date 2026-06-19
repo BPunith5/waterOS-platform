@@ -3,6 +3,7 @@ import * as QRCode from 'qrcode';
 import type { HealthLevel } from './schemas/device.schema';
 
 const CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const REG_CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 export function generateDeviceId(): string {
   let id = 'WTR';
@@ -19,6 +20,19 @@ export function generateActivationPin(): string {
 
 export function generateSecretKey(): string {
   return crypto.randomBytes(32).toString('hex');
+}
+
+export function generateRegistrationCode(): string {
+  const bytes = crypto.randomBytes(16);
+  let code = '';
+  for (let i = 0; i < 16; i++) {
+    code += REG_CHARSET[bytes[i] % REG_CHARSET.length];
+  }
+  return `${code.slice(0, 4)}-${code.slice(4, 8)}-${code.slice(8, 12)}-${code.slice(12, 16)}`;
+}
+
+export async function generateRegistrationQrCode(registrationCode: string): Promise<string> {
+  return QRCode.toDataURL(registrationCode, { errorCorrectionLevel: 'H', margin: 2, width: 256 });
 }
 
 export async function generateQrCode(deviceId: string, activationPin: string): Promise<string> {

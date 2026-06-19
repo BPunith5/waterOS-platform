@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 
-export const DEVICE_STATUSES = ['pending', 'active', 'offline'] as const;
+export const DEVICE_STATUSES = ['pending', 'active', 'offline', 'unclaimed', 'decommissioned'] as const;
 export type DeviceStatus = (typeof DEVICE_STATUSES)[number];
 
 export const HEALTH_LEVELS = ['healthy', 'good', 'warning', 'critical'] as const;
@@ -15,8 +15,8 @@ export class Device {
   @Prop({ required: true, trim: true })
   deviceName: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
-  userId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'User', default: null, index: true })
+  userId: Types.ObjectId | null;
 
   @Prop({ type: Types.ObjectId, ref: 'Tank', default: null, index: true })
   tankId: Types.ObjectId | null;
@@ -47,6 +47,24 @@ export class Device {
 
   @Prop({ type: String, enum: HEALTH_LEVELS, default: 'healthy' })
   healthLevel: HealthLevel;
+
+  @Prop({ type: String, default: null })
+  registrationCode: string | null;
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
+  assignedAdminIds: Types.ObjectId[];
+
+  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
+  claimedBy: Types.ObjectId | null;
+
+  @Prop({ type: Date, default: null })
+  claimedAt: Date | null;
+
+  @Prop({ type: String, enum: ['user_created', 'provisioned'], default: 'user_created' })
+  provisionSource: string;
+
+  @Prop({ type: Object, default: null })
+  alertThresholds: Record<string, number> | null;
 }
 
 export type DeviceDocument = HydratedDocument<Device>;

@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { UserDocument } from '../users/schemas/user.schema';
+import { ClaimDeviceDto } from './dto/claim-device.dto';
 import { ConnectDeviceDto } from './dto/connect-device.dto';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
@@ -57,5 +58,27 @@ export class DevicesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   update(@CurrentUser() user: UserDocument, @Param('id') id: string, @Body() dto: UpdateDeviceDto) {
     return this.devicesService.update(user._id, id, dto);
+  }
+
+  @Post('claim')
+  @ApiOperation({ summary: 'Claim a provisioned device using its registration code' })
+  @ApiResponse({ status: 201, description: 'Device claimed and linked to tank' })
+  @ApiResponse({ status: 400, description: 'Invalid registration code' })
+  @ApiResponse({ status: 403, description: 'Device is not available to claim' })
+  @ApiResponse({ status: 404, description: 'Device not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  claim(@CurrentUser() user: UserDocument, @Body() dto: ClaimDeviceDto) {
+    return this.devicesService.claimDevice(user._id, dto);
+  }
+
+  @Delete(':id/unclaim')
+  @ApiOperation({ summary: 'Unclaim a device (return it to unclaimed state)' })
+  @ApiParam({ name: 'id', description: 'MongoDB ObjectId of the device' })
+  @ApiResponse({ status: 200, description: 'Device returned to unclaimed state' })
+  @ApiResponse({ status: 403, description: 'Not your device' })
+  @ApiResponse({ status: 404, description: 'Device not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  unclaim(@CurrentUser() user: UserDocument, @Param('id') id: string) {
+    return this.devicesService.unclaimDevice(user._id, id);
   }
 }

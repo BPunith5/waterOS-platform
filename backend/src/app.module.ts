@@ -14,6 +14,9 @@ import { AlertsModule } from './alerts/alerts.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { SimulationModule } from './simulation/simulation.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { BootstrapModule } from './bootstrap/bootstrap.module';
+import { SuperAdminModule } from './super-admin/super-admin.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -43,6 +46,9 @@ import { AnalyticsModule } from './analytics/analytics.module';
     RealtimeModule,
     SimulationModule,
     AnalyticsModule,
+    BootstrapModule,
+    SuperAdminModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

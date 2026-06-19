@@ -14,7 +14,7 @@ import { StatusPill } from '@/components/glass/StatusPill';
 import { SectionHeader } from '@/components/glass/SectionHeader';
 import { LiquidButton } from '@/components/glass/LiquidButton';
 import { ActionSheet } from '@/components/glass/ActionSheet';
-import { WaterVessel } from '@/components/water/WaterVessel';
+import { TankDetail3D } from '@/components/3d/TankDetail3D';
 import { LiquidGauge } from '@/components/water/LiquidGauge';
 import { MetricOrbCard } from '@/components/water/MetricOrbCard';
 import { HistoryBarChart } from '@/components/water/HistoryBarChart';
@@ -134,7 +134,6 @@ export function TankDetailPage() {
   const meta = tankTypeMeta[tank.type];
   const trend = trendMeta[tank.trend];
   const TrendIcon = trend.icon;
-  const isRound = meta.shape === 'round';
 
   // History arrays from real telemetry (or generated fallback)
   const levelHistory = telemetryHistory.length >= 3
@@ -185,71 +184,107 @@ export function TankDetailPage() {
 
       {/* Main 3-column grid */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* LEFT: Vessel + info + health scores + actions */}
+        {/* LEFT: 3D tank + health scores + actions */}
         <div className="flex flex-col gap-4">
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', damping: 22, stiffness: 190 }}>
-            <GlassSurface borderRadius={12} className="flex flex-col items-center gap-4 p-5">
-              {/* Type badge + trend */}
-              <div className="flex w-full items-center justify-between">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: meta.accent }} />
-                  <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-                    {meta.label}
-                  </span>
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', damping: 22, stiffness: 190 }}
+            className="relative overflow-hidden rounded-2xl"
+            style={{
+              height: 380,
+              border: `1px solid ${meta.accent}40`,
+              boxShadow: `0 0 40px ${meta.accent}15, inset 0 1px 0 rgba(255,255,255,0.08)`,
+            }}
+          >
+            {/* 3D canvas */}
+            <TankDetail3D tank={tank} color={meta.accent} />
+
+            {/* Top overlay: type badge + trend */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-4">
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1"
+                style={{
+                  background: 'rgba(1,6,21,0.72)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: `1px solid ${meta.accent}40`,
+                }}
+              >
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: meta.accent }} />
+                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: meta.accent, fontFamily: 'var(--font-body)' }}>
+                  {meta.label}
                 </span>
-                {tank.connected && <TrendIcon size={16} color={trend.color} />}
-              </div>
+              </span>
+              {tank.connected && (
+                <span
+                  className="flex h-7 w-7 items-center justify-center rounded-full"
+                  style={{ background: 'rgba(1,6,21,0.72)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: `1px solid ${trend.color}40` }}
+                >
+                  <TrendIcon size={14} color={trend.color} />
+                </span>
+              )}
+            </div>
 
-              {/* Vessel */}
-              <WaterVessel
-                width={isRound ? 160 : 110}
-                height={isRound ? 160 : 200}
-                percentage={tank.connected ? tank.currentLevel : 0}
-                color={meta.accent}
-                shape={meta.shape}
-                radius={28}
-                showBubbles={tank.connected}
-              />
-
-              {/* Level */}
-              <div className="w-full text-center">
-                <p className="text-5xl font-bold leading-tight" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
-                  {tank.connected ? `${Math.round(tank.currentLevel * 100)}%` : '—'}
-                </p>
-                <p className="mt-0.5 text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-                  {tank.connected
-                    ? `${formatLiters(tank.capacityLiters * tank.currentLevel)} of ${formatLiters(tank.capacityLiters)}`
-                    : `${formatLiters(tank.capacityLiters)} capacity`}
-                </p>
-              </div>
-
-              <div className="h-px w-full" style={{ backgroundColor: colors.glassBorder }} />
-
-              {/* Status + last updated */}
-              <div className="flex w-full items-center justify-between">
-                {tank.connected ? (
-                  <StatusPill status={tank.status} />
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1" style={{ backgroundColor: `${colors.textTertiary}1a`, borderColor: colors.glassBorder }}>
-                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: colors.textTertiary }} />
-                    <span className="text-xs font-semibold" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>Not Connected</span>
-                  </span>
-                )}
-                <div className="flex items-center gap-1.5">
-                  {device && (
-                    <motion.span
-                      className="inline-block h-1.5 w-1.5 rounded-full"
-                      style={{ backgroundColor: colors.success }}
-                      animate={{ opacity: [1, 0.35, 1] }}
-                      transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                  )}
-                  <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-                    {device ? `Live · ${tank.lastUpdated}` : tank.lastUpdated}
-                  </p>
+            {/* Bottom overlay: level + status */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 px-4 pb-4">
+              <div
+                className="rounded-xl px-4 py-3"
+                style={{
+                  background: 'rgba(1,6,21,0.82)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  border: `1px solid rgba(255,255,255,0.1)`,
+                }}
+              >
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-4xl font-bold leading-none" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
+                      {tank.connected ? `${Math.round(tank.currentLevel * 100)}%` : '—'}
+                    </p>
+                    <p className="mt-1 text-[11px]" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+                      {tank.connected
+                        ? `${formatLiters(tank.capacityLiters * tank.currentLevel)} / ${formatLiters(tank.capacityLiters)}`
+                        : `${formatLiters(tank.capacityLiters)} capacity`}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5">
+                    {tank.connected ? (
+                      <StatusPill status={tank.status} />
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5" style={{ backgroundColor: `${colors.textTertiary}1a`, borderColor: colors.glassBorder }}>
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: colors.textTertiary }} />
+                        <span className="text-[10px] font-semibold" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>No Sensor</span>
+                      </span>
+                    )}
+                    {device && (
+                      <div className="flex items-center gap-1">
+                        <motion.span
+                          className="h-1.5 w-1.5 rounded-full"
+                          style={{ backgroundColor: colors.success, display: 'inline-block' }}
+                          animate={{ opacity: [1, 0.3, 1] }}
+                          transition={{ duration: 1.6, repeat: Infinity }}
+                        />
+                        <span className="text-[10px]" style={{ color: colors.success, fontFamily: 'var(--font-body)' }}>Live</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* fill bar */}
+                {tank.connected && (
+                  <div className="mt-2.5 h-1 overflow-hidden rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: meta.accent }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.round(tank.currentLevel * 100)}%` }}
+                      transition={{ duration: 1.2, ease: [0.215, 0.61, 0.355, 1] }}
+                    />
+                  </div>
+                )}
               </div>
-            </GlassSurface>
+            </div>
           </motion.div>
 
           {/* Health score trio */}

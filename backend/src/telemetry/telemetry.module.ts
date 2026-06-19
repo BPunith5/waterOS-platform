@@ -18,5 +18,6 @@ import { Telemetry, TelemetrySchema } from './schemas/telemetry.schema';
   ],
   providers: [TelemetryService],
   controllers: [TelemetryController, LogsController],
+  exports: [TelemetryService],
 })
 export class TelemetryModule {}

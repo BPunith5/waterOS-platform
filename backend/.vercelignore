@@ -1,0 +1,2 @@
+# Include compiled dist so @vercel/node can bundle it at deploy time
+!dist

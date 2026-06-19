@@ -8,6 +8,7 @@ import { LiquidButton } from '@/components/glass/LiquidButton';
 import { Skeleton } from '@/components/glass/Skeleton';
 import { TankGridCard } from '@/components/water/TankGridCard';
 import { TankListCard } from '@/components/water/TankListCard';
+import { TankScene } from '@/components/3d/TankScene';
 import { api } from '@/lib/api';
 import { toDisplayTank } from '@/lib/placeholder';
 import { mergeLiveTank } from '@/lib/live';
@@ -15,7 +16,7 @@ import { colors, gradients, tankTypeMeta } from '@/theme/tokens';
 import type { Tank, TankType } from '@/types';
 
 type Filter = 'all' | TankType;
-type ViewMode = 'grid' | 'list';
+type ViewMode = 'grid' | 'list' | '3d';
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All Tanks' },
@@ -30,7 +31,7 @@ export function TanksPage() {
   const [tanks, setTanks] = useState<Tank[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>('all');
-  const [view, setView] = useState<ViewMode>('grid');
+  const [view, setView] = useState<ViewMode>('3d');
 
   useEffect(() => {
     refresh();
@@ -84,24 +85,24 @@ export function TanksPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          {/* Grid / List toggle */}
+          {/* Grid / List / 3D toggle */}
           <div
             className="flex overflow-hidden rounded-lg"
             style={{ border: `1px solid ${colors.glassBorder}`, backgroundColor: colors.glassFill }}
           >
-            {(['grid', 'list'] as ViewMode[]).map((v) => (
+            {([['grid', 'Grid'], ['list', 'List'], ['3d', '3D']] as [ViewMode, string][]).map(([v, label]) => (
               <button
                 key={v}
                 type="button"
                 onClick={() => setView(v)}
-                className="px-3 py-1.5 text-xs font-semibold capitalize transition-colors"
+                className="px-3 py-1.5 text-xs font-semibold transition-colors"
                 style={{
                   color: view === v ? colors.textInverse : colors.textSecondary,
                   backgroundColor: view === v ? colors.cyan : 'transparent',
                   fontFamily: 'var(--font-body)',
                 }}
               >
-                {v}
+                {label}
               </button>
             ))}
           </div>
@@ -128,7 +129,14 @@ export function TanksPage() {
       </div>
 
       {/* ── Content ────────────────────────────────────────── */}
-      {loading ? (
+      {view === '3d' ? (
+        <div style={{ height: 'calc(100vh - 220px)', minHeight: 520 }}>
+          <TankScene
+            tanks={filtered}
+            onNavigate={(id) => navigate(`/tanks/${id}`)}
+          />
+        </div>
+      ) : loading ? (
         <div className={view === 'grid' ? 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' : 'flex flex-col gap-3'}>
           {[0, 1, 2, 3, 4, 5].map((i) => (
             <Skeleton key={i} className={view === 'grid' ? 'h-44' : 'h-28'} />

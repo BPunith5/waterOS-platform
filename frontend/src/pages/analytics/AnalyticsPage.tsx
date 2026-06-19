@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Activity, Battery, Droplet, FlaskConical, Sparkles, Thermometer, TrendingUp, Wifi } from 'lucide-react';
+import { useCountUp } from '@/hooks/useCountUp';
 import { FilterPill } from '@/components/glass/FilterPill';
 import { GlassSurface } from '@/components/glass/GlassSurface';
 import { Skeleton } from '@/components/glass/Skeleton';
 import { SectionHeader } from '@/components/glass/SectionHeader';
-import { StatCard } from '@/components/glass/StatCard';
 import { MetricOrbCard } from '@/components/water/MetricOrbCard';
 import { TrendChart } from '@/components/water/TrendChart';
 import { api, type AnalyticsRange, type AnalyticsResponse, type TankRecord } from '@/lib/api';
@@ -85,10 +86,10 @@ export function AnalyticsPage() {
       {/* Summary stat bar */}
       {!loading && summary && (
         <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard icon={Droplet} value={summary.avgWaterLevel != null ? `${Math.round(summary.avgWaterLevel * 100)}%` : '—'} label="Avg Water Level" color={colors.cyan} />
-          <StatCard icon={Sparkles} value={summary.avgQuality != null ? `${Math.round(summary.avgQuality * 100)}%` : '—'} label="Avg Quality" color={colors.electricBlue} />
-          <StatCard icon={Thermometer} value={summary.avgTemperature != null ? `${summary.avgTemperature.toFixed(1)}°C` : '—'} label="Avg Temperature" color={colors.warning} />
-          <StatCard icon={TrendingUp} value={`${Math.round(summary.deviceUptimePercent)}%`} label="Sensor Uptime" color={colors.success} />
+          <AnimStatCard icon={Droplet} numeric={summary.avgWaterLevel != null ? Math.round(summary.avgWaterLevel * 100) : null} suffix="%" label="Avg Water Level" color={colors.cyan} />
+          <AnimStatCard icon={Sparkles} numeric={summary.avgQuality != null ? Math.round(summary.avgQuality * 100) : null} suffix="%" label="Avg Quality" color={colors.electricBlue} />
+          <AnimStatCard icon={Thermometer} numeric={summary.avgTemperature != null ? summary.avgTemperature : null} suffix="°C" label="Avg Temperature" color={colors.warning} decimals={1} />
+          <AnimStatCard icon={TrendingUp} numeric={Math.round(summary.deviceUptimePercent)} suffix="%" label="Sensor Uptime" color={colors.success} />
         </div>
       )}
       {loading && (
@@ -303,5 +304,44 @@ export function AnalyticsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function AnimStatCard({
+  icon: Icon, numeric, suffix, label, color, decimals = 0,
+}: { icon: typeof Droplet; numeric: number | null; suffix: string; label: string; color: string; decimals?: number }) {
+  const animated = useCountUp(numeric ?? 0, 900, decimals);
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <motion.div
+      className="flex items-center gap-3 overflow-hidden rounded-2xl p-4"
+      style={{ background: `${color}08`, border: `1px solid ${color}20` }}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      animate={{
+        borderColor: hovered ? `${color}50` : `${color}20`,
+        boxShadow: hovered ? `0 0 24px ${color}20` : 'none',
+        y: hovered ? -2 : 0,
+      }}
+      transition={{ duration: 0.2 }}
+    >
+      <motion.div
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+        style={{ backgroundColor: `${color}18`, border: `1px solid ${color}30` }}
+        animate={{ boxShadow: [`0 0 0px ${color}00`, `0 0 14px ${color}55`, `0 0 0px ${color}00`] }}
+        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <Icon size={18} color={color} />
+      </motion.div>
+      <div>
+        <p className="text-xl font-bold leading-none tabular-nums" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
+          {numeric !== null ? `${decimals > 0 ? animated.toFixed(decimals) : animated}${suffix}` : '—'}
+        </p>
+        <p className="mt-0.5 text-[10px] uppercase tracking-wide" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+          {label}
+        </p>
+      </div>
+    </motion.div>
   );
 }

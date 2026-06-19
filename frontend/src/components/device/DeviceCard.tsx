@@ -11,6 +11,8 @@ const statusMeta: Record<DeviceStatus, { label: string; color: string }> = {
   active: { label: 'Active', color: colors.success },
   pending: { label: 'Pending', color: colors.warning },
   offline: { label: 'Offline', color: colors.danger },
+  unclaimed: { label: 'Unclaimed', color: colors.warning },
+  decommissioned: { label: 'Decommissioned', color: colors.textTertiary },
 };
 
 const healthColor: Record<DeviceRecord['healthLevel'], string> = {

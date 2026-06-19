@@ -10,3 +10,7 @@ coverage/
 .vscode/
 
 .vercel
+.env.prod
+.env.vercel
+*.png
+*.mjs

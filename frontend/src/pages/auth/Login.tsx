@@ -20,13 +20,19 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  function roleRedirect(role: string) {
+    if (role === 'superadmin') return '/console';
+    if (role === 'admin') return '/admin';
+    return '/app';
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
     try {
-      await login(email, password);
-      navigate('/app', { replace: true });
+      const loggedInUser = await login(email, password);
+      navigate(roleRedirect(loggedInUser.role), { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to sign in');
     } finally {

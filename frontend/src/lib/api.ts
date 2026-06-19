@@ -7,10 +7,13 @@ export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const setToken = (token: string) => localStorage.setItem(TOKEN_KEY, token);
 export const removeToken = () => localStorage.removeItem(TOKEN_KEY);
 
+export type UserRole = 'user' | 'admin' | 'superadmin';
+
 export type AuthUser = {
   _id: string;
   name: string;
   email: string;
+  role: UserRole;
   createdAt: string;
   updatedAt: string;
 };
@@ -35,14 +38,14 @@ export type CreateTankInput = {
   description?: string;
 };
 
-export type DeviceStatus = 'pending' | 'active' | 'offline';
+export type DeviceStatus = 'pending' | 'active' | 'offline' | 'unclaimed' | 'decommissioned';
 export type HealthLevel = 'healthy' | 'good' | 'warning' | 'critical';
 
 export type DeviceRecord = {
   _id: string;
   deviceId: string;
   deviceName: string;
-  userId: string;
+  userId: string | null;
   tankId: string | null;
   status: DeviceStatus;
   battery: number;
@@ -50,11 +53,52 @@ export type DeviceRecord = {
   lastSeen: string | null;
   activationPin?: string;
   secretKey?: string;
+  registrationCode?: string | null;
   qrCode?: string;
+  assignedAdminIds?: string[];
+  claimedBy?: string | null;
+  claimedAt?: string | null;
+  provisionSource?: 'user_created' | 'provisioned';
+  alertThresholds?: Record<string, number> | null;
   healthScore: number;
   healthLevel: HealthLevel;
   createdAt: string;
   updatedAt: string;
+};
+
+export type AdminRecord = {
+  _id: string;
+  name: string;
+  email: string;
+  role: 'admin';
+  createdAt: string;
+};
+
+export type ProvisionedDeviceResult = {
+  device: DeviceRecord;
+  qrCodeDataUrl: string;
+};
+
+export type BatchProvisionResult = {
+  devices: DeviceRecord[];
+  csv: string;
+};
+
+export type AdminPushTelemetryInput = {
+  waterLevel?: number;
+  dissolvedOxygen?: number;
+  ph?: number;
+  turbidity?: number;
+  temperature?: number;
+  tds?: number;
+  battery?: number;
+  signal?: number;
+  note?: string;
+};
+
+export type ClaimDeviceInput = {
+  registrationCode: string;
+  tankId: string;
 };
 
 export type TelemetryRecord = {
@@ -197,5 +241,42 @@ export const api = {
   analytics: {
     get: (range: AnalyticsRange = '7D', tankId?: string) =>
       request<AnalyticsResponse>(`/analytics?range=${range}${tankId ? `&tankId=${tankId}` : ''}`),
+  },
+  superadmin: {
+    listAdmins: () => request<AdminRecord[]>('/superadmin/admins'),
+    createAdmin: (body: { name: string; email: string; password: string }) =>
+      request<AdminRecord>('/superadmin/admins', { method: 'POST', body: JSON.stringify(body) }),
+    deactivateAdmin: (id: string) => request<void>(`/superadmin/admins/${id}`, { method: 'DELETE' }),
+    listDevices: () => request<DeviceRecord[]>('/superadmin/devices'),
+    provisionDevice: (body: { deviceName: string; adminId?: string }) =>
+      request<ProvisionedDeviceResult>('/superadmin/devices', { method: 'POST', body: JSON.stringify(body) }),
+    batchProvision: (body: { namePrefix: string; count: number; adminId?: string }) =>
+      request<BatchProvisionResult>('/superadmin/devices/batch', { method: 'POST', body: JSON.stringify(body) }),
+    assignDevice: (deviceId: string, adminId: string) =>
+      request<DeviceRecord>(`/superadmin/devices/${deviceId}/assign`, { method: 'POST', body: JSON.stringify({ adminId }) }),
+    unassignDevice: (deviceId: string, adminId: string) =>
+      request<DeviceRecord>(`/superadmin/devices/${deviceId}/assign/${adminId}`, { method: 'DELETE' }),
+    listUsers: () => request<AuthUser[]>('/superadmin/users'),
+    auditLog: (limit = 50) => request<{ logs: TelemetryRecord[] }>(`/superadmin/audit?limit=${limit}`),
+    rotateCode: (deviceId: string) =>
+      request<{ registrationCode: string; qrCodeDataUrl: string }>(`/superadmin/devices/${deviceId}/rotate-code`, { method: 'POST' }),
+    rotateKey: (deviceId: string) =>
+      request<{ secretKey: string }>(`/superadmin/devices/${deviceId}/rotate-key`, { method: 'POST' }),
+    decommission: (deviceId: string) =>
+      request<DeviceRecord>(`/superadmin/devices/${deviceId}/decommission`, { method: 'POST' }),
+  },
+  admin: {
+    listDevices: () => request<DeviceRecord[]>('/admin/devices'),
+    getTelemetry: (deviceId: string, limit = 50) =>
+      request<TelemetryRecord[]>(`/admin/devices/${deviceId}/telemetry?limit=${limit}`),
+    pushTelemetry: (deviceId: string, body: AdminPushTelemetryInput) =>
+      request<TelemetryRecord>(`/admin/devices/${deviceId}/telemetry`, { method: 'POST', body: JSON.stringify(body) }),
+    rotateKey: (deviceId: string) =>
+      request<{ secretKey: string }>(`/admin/devices/${deviceId}/rotate-key`, { method: 'POST' }),
+  },
+  userDevices: {
+    claim: (body: ClaimDeviceInput) =>
+      request<DeviceRecord>('/devices/claim', { method: 'POST', body: JSON.stringify(body) }),
+    unclaim: (deviceId: string) => request<DeviceRecord>(`/devices/${deviceId}/unclaim`, { method: 'DELETE' }),
   },
 };

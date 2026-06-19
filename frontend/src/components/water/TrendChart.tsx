@@ -1,4 +1,5 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
+import { motion } from 'framer-motion';
 import { GlassSurface } from '@/components/glass/GlassSurface';
 import { colors } from '@/theme/tokens';
 
@@ -32,8 +33,16 @@ function smoothPath(pts: [number, number][]): string {
   return d;
 }
 
-export function TrendChart({ data, labels = [], color = colors.cyan, height = 160, yMin, yMax, yFormat = (v) => `${Math.round(v)}`, title, unit, className = '' }: Props) {
+interface TooltipState { x: number; y: number; value: number; label: string; pct: number; }
+
+export function TrendChart({
+  data, labels = [], color = colors.cyan, height = 160,
+  yMin, yMax, yFormat = (v) => `${Math.round(v)}`,
+  title, unit, className = '',
+}: Props) {
   const uid = useId().replace(/:/g, '');
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+
   if (!data.length) return null;
 
   const W = 400;
@@ -57,6 +66,26 @@ export function TrendChart({ data, labels = [], color = colors.cyan, height = 16
 
   const gridPcts = [0, 0.25, 0.5, 0.75, 1];
   const last = pts[pts.length - 1];
+  const lastVal = data[data.length - 1];
+  const dataKey = data.join(',');
+
+  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const mx = (e.clientX - rect.left) * scaleX;
+    let best = 0, bestDist = Infinity;
+    pts.forEach(([px], i) => {
+      const d = Math.abs(px - mx);
+      if (d < bestDist) { bestDist = d; best = i; }
+    });
+    setTooltip({
+      x: pts[best][0],
+      y: pts[best][1],
+      value: data[best],
+      label: labels[best] ?? '',
+      pct: pts[best][0] / W,
+    });
+  }
 
   return (
     <GlassSurface className={`overflow-hidden p-0 ${className}`}>
@@ -67,55 +96,180 @@ export function TrendChart({ data, labels = [], color = colors.cyan, height = 16
               {title}
             </span>
           )}
-          {unit && (
-            <span className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-              {unit}
+          <div className="flex items-center gap-2">
+            {/* Last value badge */}
+            <span
+              className="rounded-full px-2 py-0.5 text-[10px] font-bold"
+              style={{ backgroundColor: `${color}18`, color, fontFamily: 'var(--font-body)' }}
+            >
+              {yFormat(lastVal)}
             </span>
-          )}
+            {unit && (
+              <span className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+                {unit}
+              </span>
+            )}
+          </div>
         </div>
       )}
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
-        <defs>
-          <linearGradient id={`tc-${uid}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity={0.3} />
-            <stop offset="100%" stopColor={color} stopOpacity={0} />
-          </linearGradient>
-        </defs>
 
-        {/* Grid lines */}
-        {gridPcts.map((pct) => {
-          const y = padT + drawH - pct * drawH;
-          const val = dMin + pct * range;
-          return (
-            <g key={pct}>
-              <line x1={padL} x2={W - padR} y1={y} y2={y} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
-              <text x={padL - 4} y={y + 3.5} textAnchor="end" fontSize={8} fill="rgba(244,251,255,0.35)" fontFamily="var(--font-body)">
-                {yFormat(val)}
+      <div className="relative">
+        <svg
+          width="100%"
+          viewBox={`0 0 ${W} ${H}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ display: 'block', cursor: 'crosshair' }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setTooltip(null)}
+        >
+          <defs>
+            <linearGradient id={`tc-${uid}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.35} />
+              <stop offset="85%" stopColor={color} stopOpacity={0.02} />
+            </linearGradient>
+            <filter id={`glow-${uid}`}>
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+
+          {/* Grid lines */}
+          {gridPcts.map((pct) => {
+            const y = padT + drawH - pct * drawH;
+            const val = dMin + pct * range;
+            return (
+              <g key={pct}>
+                <line x1={padL} x2={W - padR} y1={y} y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth={1} />
+                <text x={padL - 4} y={y + 3.5} textAnchor="end" fontSize={8} fill="rgba(244,251,255,0.3)" fontFamily="var(--font-body)">
+                  {yFormat(val)}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Area fill — fades in after line draws */}
+          {areaPath && (
+            <motion.path
+              key={`area-${dataKey}`}
+              d={areaPath}
+              fill={`url(#tc-${uid})`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.9, delay: 0.8, ease: 'easeOut' }}
+            />
+          )}
+
+          {/* Animated line draw */}
+          {linePath && (
+            <motion.path
+              key={`line-${dataKey}`}
+              d={linePath}
+              fill="none"
+              stroke={color}
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{
+                pathLength: { duration: 1.4, ease: [0.25, 0.46, 0.45, 0.94] },
+                opacity: { duration: 0.2 },
+              }}
+            />
+          )}
+
+          {/* Glowing trailing dot at last point */}
+          {last && (
+            <>
+              <motion.circle
+                key={`dot-outer-${dataKey}`}
+                cx={last[0]}
+                cy={last[1]}
+                r={6}
+                fill={color}
+                opacity={0.25}
+                initial={{ scale: 0 }}
+                animate={{ scale: [1, 1.8, 1], opacity: [0.25, 0, 0.25] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 1.4 }}
+              />
+              <motion.circle
+                key={`dot-${dataKey}`}
+                cx={last[0]}
+                cy={last[1]}
+                r={3.5}
+                fill={color}
+                filter={`url(#glow-${uid})`}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 1.2, duration: 0.4 }}
+              />
+            </>
+          )}
+
+          {/* Hover crosshair */}
+          {tooltip && (
+            <>
+              <line
+                x1={tooltip.x} x2={tooltip.x}
+                y1={padT} y2={padT + drawH}
+                stroke={color}
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                opacity={0.35}
+              />
+              <circle cx={tooltip.x} cy={tooltip.y} r={4.5} fill={color} opacity={0.9} />
+              <circle cx={tooltip.x} cy={tooltip.y} r={7} fill={color} opacity={0.15} />
+            </>
+          )}
+
+          {/* X-axis labels */}
+          {labels.map((label, i) => {
+            const step = Math.max(1, Math.ceil(labels.length / 7));
+            if (i % step !== 0 && i !== labels.length - 1) return null;
+            return (
+              <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={8} fill="rgba(244,251,255,0.3)" fontFamily="var(--font-body)">
+                {label}
               </text>
-            </g>
-          );
-        })}
+            );
+          })}
+        </svg>
 
-        {/* Area fill */}
-        {areaPath && <path d={areaPath} fill={`url(#tc-${uid})`} />}
-
-        {/* Smooth line */}
-        {linePath && <path d={linePath} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />}
-
-        {/* Last point dot */}
-        {last && <circle cx={last[0]} cy={last[1]} r={3} fill={color} />}
-
-        {/* X-axis labels */}
-        {labels.map((label, i) => {
-          const step = Math.max(1, Math.ceil(labels.length / 7));
-          if (i % step !== 0 && i !== labels.length - 1) return null;
-          return (
-            <text key={i} x={toX(i)} y={H - 4} textAnchor="middle" fontSize={8} fill="rgba(244,251,255,0.35)" fontFamily="var(--font-body)">
-              {label}
-            </text>
-          );
-        })}
-      </svg>
+        {/* HTML tooltip overlay */}
+        {tooltip && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.12 }}
+            className="pointer-events-none absolute z-10"
+            style={{
+              left: `${Math.min(Math.max(tooltip.pct * 100, 8), 80)}%`,
+              top: `${Math.max((tooltip.y / H) * 100 - 18, 2)}%`,
+              transform: tooltip.pct > 0.7 ? 'translateX(-100%)' : 'translateX(-50%)',
+            }}
+          >
+            <div
+              className="rounded-lg px-2.5 py-1.5 text-center"
+              style={{
+                background: 'rgba(1,6,21,0.92)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: `1px solid ${color}40`,
+                boxShadow: `0 4px 16px rgba(0,0,0,0.4)`,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {tooltip.label && (
+                <p className="text-[9px] uppercase tracking-wide" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
+                  {tooltip.label}
+                </p>
+              )}
+              <p className="text-sm font-bold" style={{ color, fontFamily: 'var(--font-heading)' }}>
+                {yFormat(tooltip.value)}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </GlassSurface>
   );
 }

@@ -49,4 +49,8 @@ export class RealtimeGateway {
     this.server.to(`device:${deviceId.toUpperCase()}`).emit('alert:new', alert);
     if (tankId) this.server.to(`tank:${tankId.toString()}`).emit('alert:new', alert);
   }
+
+  emitAdminDeviceOffline(adminId: string, deviceId: string, deviceName: string) {
+    this.server.to(`admin:${adminId}`).emit('admin:device:offline', { deviceId, deviceName });
+  }
 }

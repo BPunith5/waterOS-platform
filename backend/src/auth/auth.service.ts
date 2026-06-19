@@ -13,14 +13,15 @@ export class AuthService {
   ) {}
 
   private signToken(user: UserDocument): string {
-    return this.jwtService.sign({ sub: user._id.toString() });
+    return this.jwtService.sign({ sub: user._id.toString(), role: user.role });
   }
 
   async register(dto: RegisterDto) {
     const existing = await this.usersService.findByEmail(dto.email);
     if (existing) throw new ConflictException('Email already registered');
 
-    const user = await this.usersService.create(dto);
+    // Public registration always creates regular users
+    const user = await this.usersService.create({ ...dto, role: 'user' });
     return { token: this.signToken(user), user: user.toJSON() };
   }
 
