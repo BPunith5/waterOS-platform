@@ -110,7 +110,7 @@ export function ProfilePage() {
       <GlassSurface borderRadius={radius.lg} className="mb-8 flex flex-col gap-0 px-4">
         <MenuRow icon={HelpCircle} label="Help Center" />
         <div className="h-px" style={{ backgroundColor: colors.glassBorder, marginLeft: 48 }} />
-        <MenuRow icon={Info} label="About WaterOS" value="v1.0.0" showChevron={false} />
+        <MenuRow icon={Info} label="About Aqua Nigha" value="v1.0.0" showChevron={false} />
       </GlassSurface>
 
       <LiquidButton

@@ -17,6 +17,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { BootstrapModule } from './bootstrap/bootstrap.module';
 import { SuperAdminModule } from './super-admin/super-admin.module';
 import { AdminModule } from './admin/admin.module';
+import { ComplaintsModule } from './complaints/complaints.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { AdminModule } from './admin/admin.module';
     BootstrapModule,
     SuperAdminModule,
     AdminModule,
+    ComplaintsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

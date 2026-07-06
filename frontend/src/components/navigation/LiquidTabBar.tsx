@@ -8,7 +8,7 @@ import { linearGradient } from '@/theme/gradient';
 const MAIN_TABS = [
   { path: '/app',       icon: LayoutGrid, label: 'Dashboard', color: colors.cyan },
   { path: '/tanks',     icon: Droplet,    label: 'Tanks',     color: colors.teal },
-  { path: '/devices',   icon: Cpu,        label: 'Sensors',   color: colors.electricBlue },
+  { path: '/devices',   icon: Cpu,        label: 'Devices',   color: colors.electricBlue },
   { path: '/map',       icon: MapIcon,    label: 'Map',       color: colors.seafoam },
   { path: '/analytics', icon: BarChart3,  label: 'Analytics', color: colors.aqua },
   { path: '/alerts',    icon: Bell,       label: 'Alerts',    color: colors.warning },
@@ -137,7 +137,7 @@ export function LiquidTabBar() {
                   className="whitespace-nowrap text-sm font-bold tracking-wide"
                   style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}
                 >
-                  WaterOS
+                  Aqua Nigha
                 </motion.span>
               )}
             </AnimatePresence>

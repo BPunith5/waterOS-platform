@@ -29,6 +29,17 @@ export class AdminController {
     return this.adminService.getAssignedDevices(user._id);
   }
 
+  @Get('devices/:id')
+  @ApiOperation({ summary: 'Get full detail for an assigned device (populated)' })
+  @ApiParam({ name: 'id', description: 'MongoDB ObjectId of the device' })
+  @ApiResponse({ status: 200, description: 'Device with populated userId, tankId, assignedAdminIds' })
+  @ApiResponse({ status: 403, description: 'Not assigned to this device' })
+  @ApiResponse({ status: 404, description: 'Device not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  getDeviceDetail(@CurrentUser() user: UserDocument, @Param('id') id: string) {
+    return this.adminService.getDeviceDetail(user._id, id);
+  }
+
   @Get('devices/:id/telemetry')
   @ApiOperation({ summary: 'Get telemetry logs for an assigned device' })
   @ApiParam({ name: 'id', description: 'MongoDB ObjectId of the device' })

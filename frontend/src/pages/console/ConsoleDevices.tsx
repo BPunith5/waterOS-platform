@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, RefreshCw, RotateCw, Trash2, Download, Copy, Check } from 'lucide-react';
-import { api, type DeviceRecord } from '@/lib/api';
+import { Plus, RefreshCw, RotateCw, Trash2, Download, Copy, Check, X } from 'lucide-react';
+import { api, type DeviceRecord, type ProvisionedDeviceResult } from '@/lib/api';
 
 function CopyCell({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
@@ -18,19 +18,41 @@ function CopyCell({ value }: { value: string }) {
   );
 }
 
+function CredRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+  return (
+    <div className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px]" style={{ color: 'rgba(244,251,255,0.42)', fontFamily: 'var(--font-body)' }}>{label}</p>
+        <p className="truncate text-sm font-semibold" style={{ color: '#F4FBFF', fontFamily: mono ? 'monospace' : 'var(--font-heading)', fontSize: mono ? 11 : undefined }}>
+          {value}
+        </p>
+      </div>
+      <button type="button" onClick={copy} className="ml-3 shrink-0">
+        {copied ? <Check size={15} color="#34D8A6" /> : <Copy size={15} color="rgba(244,251,255,0.4)" />}
+      </button>
+    </div>
+  );
+}
+
 function StatusPill({ status }: { status: string }) {
-  const colors: Record<string, string> = {
+  const bgColors: Record<string, string> = {
     unclaimed: 'rgba(251,191,36,0.15)',
     active: 'rgba(52,216,166,0.15)',
     offline: 'rgba(251,113,133,0.15)',
     pending: 'rgba(96,165,250,0.15)',
     decommissioned: 'rgba(255,255,255,0.06)',
   };
-  const text: Record<string, string> = {
+  const textColors: Record<string, string> = {
     unclaimed: '#FBBF24', active: '#34D8A6', offline: '#FB7185', pending: '#60A5FA', decommissioned: 'rgba(244,251,255,0.42)',
   };
   return (
-    <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider" style={{ background: colors[status] ?? 'rgba(255,255,255,0.06)', color: text[status] ?? 'rgba(244,251,255,0.5)', fontFamily: 'var(--font-body)' }}>
+    <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider" style={{ background: bgColors[status] ?? 'rgba(255,255,255,0.06)', color: textColors[status] ?? 'rgba(244,251,255,0.5)', fontFamily: 'var(--font-body)' }}>
       {status}
     </span>
   );
@@ -45,6 +67,7 @@ export function ConsoleDevices() {
   const [batchLoading, setBatchLoading] = useState(false);
   const [batchCsv, setBatchCsv] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'single' | 'batch'>('single');
+  const [singleResult, setSingleResult] = useState<ProvisionedDeviceResult | null>(null);
 
   useEffect(() => { load(); }, []);
 
@@ -58,11 +81,13 @@ export function ConsoleDevices() {
   async function handleProvision(e: React.FormEvent) {
     e.preventDefault();
     setProvisioning(true);
+    setSingleResult(null);
     try {
-      await api.superadmin.provisionDevice({
+      const result = await api.superadmin.provisionDevice({
         deviceName: provisionForm.deviceName,
         adminId: provisionForm.adminId || undefined,
       });
+      setSingleResult(result);
       setProvisionForm({ deviceName: '', adminId: '' });
       load();
     } catch { /* noop */ }
@@ -91,7 +116,7 @@ export function ConsoleDevices() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `wateros-devices-${Date.now()}.csv`;
+    a.download = `aquanigha-devices-${Date.now()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -115,12 +140,12 @@ export function ConsoleDevices() {
       <h1 className="text-xl font-bold mb-6" style={{ color: '#F4FBFF', fontFamily: 'var(--font-heading)' }}>Device Provisioning</h1>
 
       {/* Provision tabs */}
-      <div className="rounded-2xl p-5 mb-6" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="rounded-2xl p-5 mb-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="flex gap-2 mb-4">
           {(['single', 'batch'] as const).map(tab => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => { setActiveTab(tab); setSingleResult(null); setBatchCsv(null); }}
               className="rounded-xl px-4 py-1.5 text-sm font-medium transition-all capitalize"
               style={{
                 background: activeTab === tab ? 'rgba(34,211,238,0.15)' : 'rgba(255,255,255,0.05)',
@@ -174,7 +199,7 @@ export function ConsoleDevices() {
             <input
               type="number"
               min={1}
-              max={100}
+              max={50}
               className="w-24 rounded-xl px-3 py-2.5 text-sm outline-none"
               style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: '#F4FBFF', fontFamily: 'var(--font-body)' }}
               value={batchForm.count}
@@ -194,7 +219,7 @@ export function ConsoleDevices() {
               style={{ background: 'rgba(34,211,238,0.15)', border: '1px solid rgba(34,211,238,0.3)', color: '#22D3EE', fontFamily: 'var(--font-body)' }}
             >
               <Plus size={15} />
-              {batchLoading ? 'Provisioning…' : `Batch Provision`}
+              {batchLoading ? 'Provisioning…' : 'Batch Provision'}
             </button>
           </form>
         )}
@@ -212,6 +237,56 @@ export function ConsoleDevices() {
           </div>
         )}
       </div>
+
+      {/* Single provision result card */}
+      {singleResult && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 rounded-2xl p-5"
+          style={{ background: 'rgba(52,216,166,0.06)', border: '1px solid rgba(52,216,166,0.2)' }}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full" style={{ background: 'rgba(52,216,166,0.15)' }}>
+                <Check size={14} color="#34D8A6" />
+              </div>
+              <p className="text-sm font-semibold" style={{ color: '#34D8A6', fontFamily: 'var(--font-heading)' }}>
+                Device Provisioned — {singleResult.device.deviceName}
+              </p>
+            </div>
+            <button onClick={() => setSingleResult(null)} className="rounded-lg p-1 hover:bg-white/5 transition-colors">
+              <X size={15} color="rgba(244,251,255,0.4)" />
+            </button>
+          </div>
+
+          <div className="flex gap-5 flex-wrap">
+            {singleResult.qrCodeDataUrl && (
+              <div className="shrink-0">
+                <img
+                  src={singleResult.qrCodeDataUrl}
+                  alt="QR code"
+                  className="h-36 w-36 rounded-xl"
+                  style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+                />
+                <p className="mt-1 text-center text-[10px]" style={{ color: 'rgba(244,251,255,0.4)', fontFamily: 'var(--font-body)' }}>
+                  Scan to activate
+                </p>
+              </div>
+            )}
+            <div className="flex-1 min-w-52 flex flex-col gap-2">
+              <CredRow label="Device ID" value={singleResult.device.deviceId} mono />
+              <CredRow label="Activation PIN" value={singleResult.device.activationPin ?? ''} />
+              {singleResult.device.secretKey && (
+                <CredRow label="Secret Key" value={singleResult.device.secretKey} mono />
+              )}
+              <p className="mt-1 text-[11px]" style={{ color: 'rgba(244,251,255,0.35)', fontFamily: 'var(--font-body)' }}>
+                Save these credentials — they are used to activate the physical device.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Devices table */}
       <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>

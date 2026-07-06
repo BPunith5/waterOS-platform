@@ -17,10 +17,11 @@ export class AlertsController {
   @Get()
   @ApiOperation({ summary: 'List alerts for the current user, optionally filtered by severity' })
   @ApiQuery({ name: 'severity', required: false, enum: ['info', 'warning', 'critical'], description: 'Filter by severity level' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Max alerts to return (default 100)' })
   @ApiResponse({ status: 200, description: 'Array of alert documents, newest first' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  findAll(@CurrentUser() user: UserDocument, @Query() query: FindAlertsQueryDto) {
-    return this.alertsService.findAllForUser(user._id, query.severity);
+  findAll(@CurrentUser() user: UserDocument, @Query() query: FindAlertsQueryDto, @Query('limit') limit?: string) {
+    return this.alertsService.findAllForUser(user._id, query.severity, limit ? Math.min(parseInt(limit, 10), 500) : 100);
   }
 
   @Patch(':id')

@@ -16,6 +16,12 @@ export class User {
   @Prop({ type: String, enum: ['user', 'admin', 'superadmin'], default: 'user' })
   role: string;
 
+  @Prop({ type: String, select: false })
+  otp?: string;
+
+  @Prop({ type: Date, select: false })
+  otpExpiry?: Date;
+
   comparePassword: (candidate: string) => Promise<boolean>;
 }
 

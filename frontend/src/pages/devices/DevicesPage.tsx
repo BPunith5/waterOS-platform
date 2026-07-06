@@ -59,7 +59,7 @@ export function DevicesPage() {
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold" style={{ color: colors.textPrimary, fontFamily: 'var(--font-heading)' }}>
-            Sensors
+            Devices
           </h1>
           <p className="mt-1 text-sm" style={{ color: colors.textSecondary, fontFamily: 'var(--font-body)' }}>
             {devices.length} registered · {activeCount} active
@@ -91,7 +91,7 @@ export function DevicesPage() {
             No devices yet
           </p>
           <p className="text-sm" style={{ color: colors.textSecondary, fontFamily: 'var(--font-body)' }}>
-            Register a sensor and connect it to a tank to start streaming live readings.
+            Connect a pre-provisioned device to a tank to start streaming live readings.
           </p>
         </GlassSurface>
       ) : (

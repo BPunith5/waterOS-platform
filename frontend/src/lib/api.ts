@@ -211,8 +211,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const api = {
   auth: {
-    login: (body: { email: string; password: string }) =>
-      request<{ token: string; user: AuthUser }>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+    login: (body: { email: string }) =>
+      request<{ message: string; email: string }>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+    verifyOtp: (body: { email: string; otp: string }) =>
+      request<{ token: string; user: AuthUser }>('/auth/verify-otp', { method: 'POST', body: JSON.stringify(body) }),
     register: (body: { name: string; email: string; password: string }) =>
       request<{ token: string; user: AuthUser }>('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
     me: () => request<{ user: AuthUser }>('/auth/me'),

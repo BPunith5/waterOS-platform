@@ -32,7 +32,7 @@ export function AdminShell() {
             <UserCog size={16} color="#22D3EE" />
           </div>
           <div>
-            <p className="text-sm font-bold leading-none" style={{ color: '#F4FBFF', fontFamily: 'var(--font-heading)' }}>WaterOS</p>
+            <p className="text-sm font-bold leading-none" style={{ color: '#F4FBFF', fontFamily: 'var(--font-heading)' }}>Aqua Nigha</p>
             <p className="text-[10px] mt-0.5" style={{ color: '#22D3EE', fontFamily: 'var(--font-body)' }}>Admin Panel</p>
           </div>
         </div>

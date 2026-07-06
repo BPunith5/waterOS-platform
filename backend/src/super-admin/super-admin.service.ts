@@ -180,6 +180,34 @@ export class SuperAdminService {
     return device;
   }
 
+  async getDeviceDetail(deviceId: string): Promise<any> {
+    const device = await this.deviceModel
+      .findById(deviceId)
+      .select('+secretKey')
+      .populate('userId', 'name email')
+      .populate('tankId', 'tankName location')
+      .populate('assignedAdminIds', 'name email')
+      .exec();
+    if (!device) throw new NotFoundException('Device not found');
+    return device;
+  }
+
+  async getDeviceTelemetry(deviceId: string, limit: number): Promise<TelemetryDocument[]> {
+    const device = await this.deviceModel.findById(deviceId).exec();
+    if (!device) throw new NotFoundException('Device not found');
+    return this.telemetryModel
+      .find({ deviceId: device.deviceId })
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .exec();
+  }
+
+  async getDeviceSecret(deviceId: string): Promise<{ secretKey: string }> {
+    const device = await this.deviceModel.findById(deviceId).select('+secretKey').exec();
+    if (!device) throw new NotFoundException('Device not found');
+    return { secretKey: device.secretKey ?? '' };
+  }
+
   async rotateSecretKey(deviceId: string): Promise<DeviceDocument> {
     const device = await this.deviceModel.findById(deviceId).exec();
     if (!device) throw new NotFoundException('Device not found');
