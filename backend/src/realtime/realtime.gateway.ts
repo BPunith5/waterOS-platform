@@ -41,16 +41,19 @@ export class RealtimeGateway {
   }
 
   emitDeviceUpdate(deviceId: string, tankId: Types.ObjectId | null, payload: unknown) {
+    if (!this.server) return;
     this.server.to(`device:${deviceId.toUpperCase()}`).emit('device:update', payload);
     if (tankId) this.server.to(`tank:${tankId.toString()}`).emit('device:update', payload);
   }
 
   emitAlert(deviceId: string, tankId: Types.ObjectId | null, alert: unknown) {
+    if (!this.server) return;
     this.server.to(`device:${deviceId.toUpperCase()}`).emit('alert:new', alert);
     if (tankId) this.server.to(`tank:${tankId.toString()}`).emit('alert:new', alert);
   }
 
   emitAdminDeviceOffline(adminId: string, deviceId: string, deviceName: string) {
+    if (!this.server) return;
     this.server.to(`admin:${adminId}`).emit('admin:device:offline', { deviceId, deviceName });
   }
 }
