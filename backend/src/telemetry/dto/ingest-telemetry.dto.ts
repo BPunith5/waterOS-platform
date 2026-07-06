@@ -1,7 +1,12 @@
-import { IsNumber, IsOptional, Max, Min } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class IngestTelemetryDto {
+  @ApiPropertyOptional({ description: 'Device secret key — include here when sending via MQTT webhook (alternative to ?key= query param)' })
+  @IsOptional()
+  @IsString()
+  key?: string;
+
   @ApiProperty({ example: 0.72, minimum: 0, maximum: 1, description: 'Water level as a fraction (0 = empty, 1 = full)' })
   @IsNumber()
   @Min(0)

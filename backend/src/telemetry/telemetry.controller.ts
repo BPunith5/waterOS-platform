@@ -18,7 +18,8 @@ export class TelemetryController {
   @ApiQuery({ name: 'key', required: true, description: 'Per-device secret key (32-byte hex string)' })
   @ApiResponse({ status: 201, description: 'Telemetry saved; alerts evaluated; socket event emitted' })
   @ApiResponse({ status: 401, description: 'Invalid device ID or secret key' })
-  ingest(@Param('deviceId') deviceId: string, @Query('key') key: string | undefined, @Body() dto: IngestTelemetryDto) {
+  ingest(@Param('deviceId') deviceId: string, @Query('key') queryKey: string | undefined, @Body() dto: IngestTelemetryDto) {
+    const key = queryKey ?? dto.key;
     return this.telemetryService.ingest(deviceId, key, dto);
   }
 }
