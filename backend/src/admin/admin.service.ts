@@ -161,6 +161,20 @@ export class AdminService {
     );
   }
 
+  async getDeviceDetail(adminId: Types.ObjectId, deviceId: string): Promise<any> {
+    const check = await this.deviceModel.findById(deviceId).exec();
+    if (!check) throw new NotFoundException('Device not found');
+    const isAssigned = check.assignedAdminIds?.some(id => id.equals(adminId));
+    if (!isAssigned) throw new ForbiddenException('Not assigned to this device');
+    return this.deviceModel
+      .findById(deviceId)
+      .select('+secretKey')
+      .populate('userId', 'name email')
+      .populate('tankId', 'tankName location')
+      .populate('assignedAdminIds', 'name email')
+      .exec();
+  }
+
   async rotateSecretKey(adminId: Types.ObjectId, deviceId: string): Promise<DeviceDocument> {
     const device = await this.deviceModel.findById(deviceId).exec();
     if (!device) throw new NotFoundException('Device not found');

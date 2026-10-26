@@ -78,7 +78,7 @@ export function SignupPage() {
             Create Account
           </h1>
           <p className="mt-1.5 text-base" style={{ color: colors.textSecondary, fontFamily: 'var(--font-body)' }}>
-            Join WaterOS and start monitoring smarter
+            Join Aqua Nigha and start monitoring smarter
           </p>
         </div>
 

@@ -9,10 +9,12 @@ export class UsersService {
   constructor(@InjectModel(User.name) private readonly userModel: Model<User>) {}
 
   findByEmail(email: string): Promise<UserDocument | null> {
+    // Note: no .lean() here — the caller uses the returned document to call .save() or .toJSON()
     return this.userModel.findOne({ email: email.toLowerCase() }).select('+password').exec();
   }
 
   findById(id: string | Types.ObjectId): Promise<UserDocument | null> {
+    // Note: no .lean() here — the result is attached to req.user and used as a full document
     return this.userModel.findById(id).exec();
   }
 
@@ -21,11 +23,11 @@ export class UsersService {
   }
 
   findAll(): Promise<UserDocument[]> {
-    return this.userModel.find({ role: 'user' }).sort({ createdAt: -1 }).exec();
+    return this.userModel.find({ role: 'user' }).sort({ createdAt: -1 }).lean().exec() as unknown as Promise<UserDocument[]>;
   }
 
   findAllAdmins(): Promise<UserDocument[]> {
-    return this.userModel.find({ role: 'admin' }).sort({ createdAt: -1 }).exec();
+    return this.userModel.find({ role: 'admin' }).sort({ createdAt: -1 }).lean().exec() as unknown as Promise<UserDocument[]>;
   }
 
   async createAdmin(data: { name: string; email: string; password: string }): Promise<UserDocument> {

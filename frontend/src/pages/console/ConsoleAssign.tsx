@@ -40,6 +40,17 @@ export function ConsoleAssign() {
     catch { /* noop */ }
   }
 
+  // assignedAdminIds may be populated objects { _id, name, email } or plain strings
+  function getAdminId(entry: unknown): string {
+    if (entry && typeof entry === 'object' && '_id' in (entry as object)) return (entry as { _id: string })._id;
+    return entry as string;
+  }
+  function getAdminName(entry: unknown): string {
+    if (entry && typeof entry === 'object' && 'name' in (entry as object)) return (entry as { name: string }).name;
+    const admin = admins.find(a => a._id === entry);
+    return admin?.name ?? String(entry);
+  }
+
   // Build assignments view: each device → its assigned admins
   const assigned = devices.filter(d => d.assignedAdminIds && d.assignedAdminIds.length > 0);
 
@@ -110,15 +121,15 @@ export function ConsoleAssign() {
             <div key={device._id} className="px-5 py-4 border-b last:border-b-0" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
               <p className="text-sm font-semibold mb-2" style={{ color: '#F4FBFF', fontFamily: 'var(--font-body)' }}>{device.deviceName}</p>
               <div className="flex flex-wrap gap-2">
-                {(device.assignedAdminIds ?? []).map(adminId => {
-                  const admin = admins.find(a => a._id === adminId);
+                {(device.assignedAdminIds ?? []).map(entry => {
+                  const adminId = getAdminId(entry);
                   return (
                     <span
                       key={adminId}
                       className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs"
                       style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.18)', color: '#22D3EE', fontFamily: 'var(--font-body)' }}
                     >
-                      {admin?.name ?? adminId}
+                      {getAdminName(entry)}
                       <button onClick={() => handleUnassign(device._id, adminId)}>
                         <Link2Off size={11} />
                       </button>

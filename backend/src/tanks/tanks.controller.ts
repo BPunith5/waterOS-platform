@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nes
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { ParseObjectIdPipe } from '../common/pipes/parse-object-id.pipe';
 import type { UserDocument } from '../users/schemas/user.schema';
 import { TanksService } from './tanks.service';
 import { CreateTankDto } from './dto/create-tank.dto';
@@ -36,7 +37,7 @@ export class TanksController {
   @ApiResponse({ status: 200, description: 'Tank document' })
   @ApiResponse({ status: 404, description: 'Tank not found or not owned by user' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  findOne(@CurrentUser() user: UserDocument, @Param('id') id: string) {
+  findOne(@CurrentUser() user: UserDocument, @Param('id', ParseObjectIdPipe) id: string) {
     return this.tanksService.findOne(user._id, id);
   }
 
@@ -46,7 +47,7 @@ export class TanksController {
   @ApiResponse({ status: 200, description: 'Updated tank document' })
   @ApiResponse({ status: 404, description: 'Tank not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  update(@CurrentUser() user: UserDocument, @Param('id') id: string, @Body() dto: UpdateTankDto) {
+  update(@CurrentUser() user: UserDocument, @Param('id', ParseObjectIdPipe) id: string, @Body() dto: UpdateTankDto) {
     return this.tanksService.update(user._id, id, dto);
   }
 
@@ -56,7 +57,7 @@ export class TanksController {
   @ApiResponse({ status: 200, description: '{ success: true }' })
   @ApiResponse({ status: 404, description: 'Tank not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async remove(@CurrentUser() user: UserDocument, @Param('id') id: string) {
+  async remove(@CurrentUser() user: UserDocument, @Param('id', ParseObjectIdPipe) id: string) {
     await this.tanksService.remove(user._id, id);
     return { success: true };
   }

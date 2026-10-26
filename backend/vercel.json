@@ -1,12 +1,8 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/index.ts",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/api/index.ts" }
+  "buildCommand": "npm run build && node -e \"const fs=require('fs');fs.mkdirSync('public',{recursive:true});fs.writeFileSync('public/.gitkeep','')\"",
+  "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/index.ts" }
   ]
 }

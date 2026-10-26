@@ -6,6 +6,7 @@ import { api, type AdminRecord } from '@/lib/api';
 export function ConsoleAdmins() {
   const [admins, setAdmins] = useState<AdminRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [listError, setListError] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,8 +16,9 @@ export function ConsoleAdmins() {
 
   async function load() {
     setLoading(true);
+    setListError(null);
     try { setAdmins(await api.superadmin.listAdmins()); }
-    catch { /* noop */ }
+    catch { setListError('Failed to load admins. Check your connection and try again.'); }
     finally { setLoading(false); }
   }
 
@@ -100,7 +102,18 @@ export function ConsoleAdmins() {
             <RefreshCw size={14} color="rgba(244,251,255,0.42)" />
           </button>
         </div>
-        {loading ? (
+        {listError ? (
+          <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <p className="text-sm" style={{ color: '#FB7185', fontFamily: 'var(--font-body)' }}>{listError}</p>
+            <button
+              onClick={load}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all hover:opacity-80"
+              style={{ background: 'rgba(251,113,133,0.1)', border: '1px solid rgba(251,113,133,0.25)', color: '#FB7185', fontFamily: 'var(--font-body)' }}
+            >
+              Retry
+            </button>
+          </div>
+        ) : loading ? (
           <div className="py-12 text-center text-sm" style={{ color: 'rgba(244,251,255,0.42)', fontFamily: 'var(--font-body)' }}>Loading…</div>
         ) : admins.length === 0 ? (
           <div className="py-12 text-center text-sm" style={{ color: 'rgba(244,251,255,0.42)', fontFamily: 'var(--font-body)' }}>No admins yet</div>

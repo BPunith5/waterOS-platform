@@ -1,6 +1,11 @@
 import type { TankType } from '@/types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+if (!import.meta.env.VITE_API_URL && import.meta.env.MODE === 'production') {
+  console.error('[WaterOS] VITE_API_URL is not set. API calls will fail.');
+}
+
 const TOKEN_KEY = 'waterOS_token';
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
@@ -211,8 +216,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const api = {
   auth: {
-    login: (body: { email: string; password: string }) =>
-      request<{ token: string; user: AuthUser }>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+    login: (body: { email: string }) =>
+      request<{ message: string; email: string }>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+    verifyOtp: (body: { email: string; otp: string }) =>
+      request<{ token: string; user: AuthUser }>('/auth/verify-otp', { method: 'POST', body: JSON.stringify(body) }),
     register: (body: { name: string; email: string; password: string }) =>
       request<{ token: string; user: AuthUser }>('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
     me: () => request<{ user: AuthUser }>('/auth/me'),
@@ -278,5 +285,13 @@ export const api = {
     claim: (body: ClaimDeviceInput) =>
       request<DeviceRecord>('/devices/claim', { method: 'POST', body: JSON.stringify(body) }),
     unclaim: (deviceId: string) => request<DeviceRecord>(`/devices/${deviceId}/unclaim`, { method: 'DELETE' }),
+  },
+  systemConfig: {
+    get: () => request<{ telemetryProtocol: 'mqtt' | 'http' }>('/system-config'),
+    setProtocol: (p: 'mqtt' | 'http') =>
+      request<{ telemetryProtocol: 'mqtt' | 'http' }>('/system-config', {
+        method: 'PATCH',
+        body: JSON.stringify({ telemetryProtocol: p }),
+      }),
   },
 };

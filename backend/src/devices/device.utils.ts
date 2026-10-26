@@ -35,6 +35,10 @@ export async function generateRegistrationQrCode(registrationCode: string): Prom
   return QRCode.toDataURL(registrationCode, { errorCorrectionLevel: 'H', margin: 2, width: 256 });
 }
 
+export async function generateDeviceIdQrCode(deviceId: string): Promise<string> {
+  return QRCode.toDataURL(deviceId, { errorCorrectionLevel: 'H', margin: 2, width: 256 });
+}
+
 export async function generateQrCode(deviceId: string, activationPin: string): Promise<string> {
   return QRCode.toDataURL(`${deviceId}:${activationPin}`, {
     errorCorrectionLevel: 'H',

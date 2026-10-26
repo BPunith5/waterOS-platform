@@ -12,6 +12,7 @@ import {
   generateSecretKey,
   generateRegistrationCode,
   generateRegistrationQrCode,
+  generateDeviceIdQrCode,
 } from '../devices/device.utils';
 import { Device, DeviceDocument } from '../devices/schemas/device.schema';
 import { Telemetry, TelemetryDocument } from '../telemetry/schemas/telemetry.schema';
@@ -40,7 +41,7 @@ export class SuperAdminService {
   }
 
   listAdmins(): Promise<UserDocument[]> {
-    return this.userModel.find({ role: 'admin' }).sort({ createdAt: -1 }).exec();
+    return this.userModel.find({ role: 'admin' }).sort({ createdAt: -1 }).lean().exec() as unknown as Promise<UserDocument[]>;
   }
 
   async deactivateAdmin(id: string): Promise<void> {
@@ -52,8 +53,8 @@ export class SuperAdminService {
     const deviceId = generateDeviceId();
     const activationPin = generateActivationPin();
     const secretKey = generateSecretKey();
-    const registrationCode = generateRegistrationCode();
-    const qrCode = await generateRegistrationQrCode(registrationCode);
+    const registrationCode = deviceId;
+    const qrCode = await generateDeviceIdQrCode(deviceId);
 
     const assignedAdminIds: Types.ObjectId[] = [];
     if (dto.adminId) {
@@ -92,8 +93,8 @@ export class SuperAdminService {
       const deviceId = generateDeviceId();
       const activationPin = generateActivationPin();
       const secretKey = generateSecretKey();
-      const registrationCode = generateRegistrationCode();
-      const qrCode = await generateRegistrationQrCode(registrationCode);
+      const registrationCode = deviceId;
+      const qrCode = await generateDeviceIdQrCode(deviceId);
 
       const device = await this.deviceModel.create({
         deviceId,
@@ -120,13 +121,17 @@ export class SuperAdminService {
     return { devices, csv };
   }
 
-  listAllDevices(): Promise<DeviceDocument[]> {
+  listAllDevices(limit = 50, skip = 0): Promise<DeviceDocument[]> {
+    const safeLimit = Math.min(limit, 200);
     return this.deviceModel
       .find()
       .populate('claimedBy', 'name email')
       .populate('assignedAdminIds', 'name email')
       .sort({ createdAt: -1 })
-      .exec();
+      .skip(skip)
+      .limit(safeLimit)
+      .lean()
+      .exec() as unknown as Promise<DeviceDocument[]>;
   }
 
   async assignDevice(deviceId: string, adminId: string): Promise<DeviceDocument> {
@@ -154,8 +159,9 @@ export class SuperAdminService {
     return device;
   }
 
-  listAllUsers(): Promise<UserDocument[]> {
-    return this.userModel.find({ role: 'user' }).sort({ createdAt: -1 }).exec();
+  listAllUsers(limit = 50, skip = 0): Promise<UserDocument[]> {
+    const safeLimit = Math.min(limit, 200);
+    return this.userModel.find({ role: 'user' }).sort({ createdAt: -1 }).skip(skip).limit(safeLimit).lean().exec() as unknown as Promise<UserDocument[]>;
   }
 
   getTelemetryAuditLog(limit = 100): Promise<TelemetryDocument[]> {
@@ -174,10 +180,38 @@ export class SuperAdminService {
       throw new ForbiddenException('Registration code can only be rotated for unclaimed devices');
     }
 
-    device.registrationCode = generateRegistrationCode();
-    device.qrCode = await generateRegistrationQrCode(device.registrationCode);
+    device.registrationCode = device.deviceId;
+    device.qrCode = await generateDeviceIdQrCode(device.deviceId);
     await device.save();
     return device;
+  }
+
+  async getDeviceDetail(deviceId: string): Promise<any> {
+    const device = await this.deviceModel
+      .findById(deviceId)
+      .select('+secretKey')
+      .populate('userId', 'name email')
+      .populate('tankId', 'tankName location')
+      .populate('assignedAdminIds', 'name email')
+      .exec();
+    if (!device) throw new NotFoundException('Device not found');
+    return device;
+  }
+
+  async getDeviceTelemetry(deviceId: string, limit: number): Promise<TelemetryDocument[]> {
+    const device = await this.deviceModel.findById(deviceId).exec();
+    if (!device) throw new NotFoundException('Device not found');
+    return this.telemetryModel
+      .find({ deviceId: device.deviceId })
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .exec();
+  }
+
+  async getDeviceSecret(deviceId: string): Promise<{ secretKey: string }> {
+    const device = await this.deviceModel.findById(deviceId).select('+secretKey').exec();
+    if (!device) throw new NotFoundException('Device not found');
+    return { secretKey: device.secretKey ?? '' };
   }
 
   async rotateSecretKey(deviceId: string): Promise<DeviceDocument> {

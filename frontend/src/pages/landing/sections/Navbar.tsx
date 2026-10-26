@@ -51,7 +51,7 @@ export function Navbar() {
               <Droplets size={16} color="#01040F" />
             </div>
             <span className="text-lg font-bold tracking-tight" style={{ fontFamily: 'var(--font-heading)', color: colors.textPrimary }}>
-              WaterOS
+              Aqua Nigha
             </span>
           </Link>
 

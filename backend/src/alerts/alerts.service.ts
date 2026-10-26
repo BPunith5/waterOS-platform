@@ -28,15 +28,17 @@ export class AlertsService {
     private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
-  findAllForUser(userId: Types.ObjectId, severity?: AlertSeverity): Promise<AlertDocument[]> {
+  findAllForUser(userId: Types.ObjectId, severity?: AlertSeverity, limit = 100): Promise<AlertDocument[]> {
     const filter: QueryFilter<Alert> = { userId };
     if (severity) filter.severity = severity;
     return this.alertModel
       .find(filter)
       .sort({ createdAt: -1 })
+      .limit(limit)
       .populate('deviceId', 'deviceId deviceName')
       .populate('tankId', 'tankName')
-      .exec();
+      .lean()
+      .exec() as unknown as Promise<AlertDocument[]>;
   }
 
   async markRead(userId: Types.ObjectId, id: string, read: boolean): Promise<AlertDocument> {

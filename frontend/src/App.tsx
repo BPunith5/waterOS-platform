@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { OceanThemeProvider } from './context/OceanThemeContext';
@@ -28,6 +29,7 @@ import { ConsoleAdmins } from './pages/console/ConsoleAdmins';
 import { ConsoleDevices } from './pages/console/ConsoleDevices';
 import { ConsoleAssign } from './pages/console/ConsoleAssign';
 import { ConsoleAudit } from './pages/console/ConsoleAudit';
+import { ConsoleSettings } from './pages/console/ConsoleSettings';
 // Admin panel
 import { AdminDevices } from './pages/admin-panel/AdminDevices';
 import { AdminTelemetry } from './pages/admin-panel/AdminTelemetry';
@@ -35,6 +37,7 @@ import { AdminPush } from './pages/admin-panel/AdminPush';
 
 function App() {
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <AuthProvider>
         <SocketProvider>
@@ -81,6 +84,7 @@ function App() {
                   <Route path="/console/devices" element={<ConsoleDevices />} />
                   <Route path="/console/assign" element={<ConsoleAssign />} />
                   <Route path="/console/audit" element={<ConsoleAudit />} />
+                  <Route path="/console/settings" element={<ConsoleSettings />} />
                 </Route>
               </Route>
 
@@ -90,6 +94,7 @@ function App() {
         </SocketProvider>
       </AuthProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

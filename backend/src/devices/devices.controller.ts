@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nes
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ParseObjectIdPipe } from '../common/pipes/parse-object-id.pipe';
 import type { UserDocument } from '../users/schemas/user.schema';
 import { ClaimDeviceDto } from './dto/claim-device.dto';
 import { ConnectDeviceDto } from './dto/connect-device.dto';
@@ -47,7 +48,7 @@ export class DevicesController {
   @ApiResponse({ status: 200, description: 'Device document' })
   @ApiResponse({ status: 404, description: 'Device not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  findOne(@CurrentUser() user: UserDocument, @Param('id') id: string) {
+  findOne(@CurrentUser() user: UserDocument, @Param('id', ParseObjectIdPipe) id: string) {
     return this.devicesService.findOne(user._id, id);
   }
 
@@ -56,8 +57,17 @@ export class DevicesController {
   @ApiParam({ name: 'id', description: 'MongoDB ObjectId of the device' })
   @ApiResponse({ status: 200, description: 'Updated device document' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  update(@CurrentUser() user: UserDocument, @Param('id') id: string, @Body() dto: UpdateDeviceDto) {
+  update(@CurrentUser() user: UserDocument, @Param('id', ParseObjectIdPipe) id: string, @Body() dto: UpdateDeviceDto) {
     return this.devicesService.update(user._id, id, dto);
+  }
+
+  @Post('verify-claim')
+  @ApiOperation({ summary: 'Verify registration code + PIN are valid without claiming' })
+  @ApiResponse({ status: 201, description: 'Code and PIN are valid' })
+  @ApiResponse({ status: 403, description: 'Incorrect activation PIN or device already claimed' })
+  @ApiResponse({ status: 404, description: 'Device not found' })
+  verifyClaim(@Body() dto: ClaimDeviceDto) {
+    return this.devicesService.verifyClaimCode(dto);
   }
 
   @Post('claim')
@@ -78,7 +88,7 @@ export class DevicesController {
   @ApiResponse({ status: 403, description: 'Not your device' })
   @ApiResponse({ status: 404, description: 'Device not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  unclaim(@CurrentUser() user: UserDocument, @Param('id') id: string) {
+  unclaim(@CurrentUser() user: UserDocument, @Param('id', ParseObjectIdPipe) id: string) {
     return this.devicesService.unclaimDevice(user._id, id);
   }
 }

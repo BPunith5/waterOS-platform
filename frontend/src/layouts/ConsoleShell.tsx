@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Users, Cpu, Link2, FileText, LogOut, Shield } from 'lucide-react';
+import { Users, Cpu, Link2, FileText, LogOut, Shield, Settings } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { OceanBackground } from '@/components/water/OceanBackground';
 
@@ -8,6 +8,7 @@ const NAV = [
   { to: '/console/devices', icon: Cpu, label: 'Devices' },
   { to: '/console/assign', icon: Link2, label: 'Assign' },
   { to: '/console/audit', icon: FileText, label: 'Audit Log' },
+  { to: '/console/settings', icon: Settings, label: 'Settings' },
 ];
 
 export function ConsoleShell() {
@@ -34,7 +35,7 @@ export function ConsoleShell() {
             <Shield size={16} color="#FB7185" />
           </div>
           <div>
-            <p className="text-sm font-bold leading-none" style={{ color: '#F4FBFF', fontFamily: 'var(--font-heading)' }}>WaterOS</p>
+            <p className="text-sm font-bold leading-none" style={{ color: '#F4FBFF', fontFamily: 'var(--font-heading)' }}>Aqua Nigha</p>
             <p className="text-[10px] mt-0.5" style={{ color: '#FB7185', fontFamily: 'var(--font-body)' }}>Super Admin</p>
           </div>
         </div>

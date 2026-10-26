@@ -46,7 +46,7 @@ export function Footer() {
               >
                 <Droplets size={16} color="#01040F" />
               </div>
-              <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-heading)', color: colors.textPrimary }}>WaterOS</span>
+              <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-heading)', color: colors.textPrimary }}>Aqua Nigha</span>
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-relaxed" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
               Real-time IoT water monitoring for tanks, farms, and industrial systems. Built with NestJS, React, and Socket.IO.
@@ -112,7 +112,7 @@ export function Footer() {
           style={{ borderColor: 'rgba(255,255,255,0.07)' }}
         >
           <p className="text-xs" style={{ color: colors.textTertiary, fontFamily: 'var(--font-body)' }}>
-            © 2026 WaterOS. Built by B Punith.
+            © 2026 Aqua Nigha. Built by B Punith.
           </p>
           <div className="flex items-center gap-1.5">
             <span className="status-dot-live h-1.5 w-1.5 rounded-full" style={{ backgroundColor: colors.success, color: colors.success }} />
