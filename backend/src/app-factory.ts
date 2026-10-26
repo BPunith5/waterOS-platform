@@ -12,7 +12,12 @@ export async function createApp(): Promise<INestApplication> {
   });
 
   app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, transform: true }),
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+      forbidUnknownValues: true,
+    }),
   );
 
   app.setGlobalPrefix('api');

@@ -37,7 +37,8 @@ export class AlertsService {
       .limit(limit)
       .populate('deviceId', 'deviceId deviceName')
       .populate('tankId', 'tankName')
-      .exec();
+      .lean()
+      .exec() as unknown as Promise<AlertDocument[]>;
   }
 
   async markRead(userId: Types.ObjectId, id: string, read: boolean): Promise<AlertDocument> {

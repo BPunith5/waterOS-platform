@@ -6,6 +6,7 @@ import {
   Activity, AlertOctagon, ArrowRight, Bell, CheckCircle2,
   Cpu, Droplet, Plus, Sparkles, TrendingDown, TrendingUp, Wifi,
 } from 'lucide-react';
+import { useMqttTelemetry } from '@/hooks/useMqttTelemetry';
 import { AlertCard } from '@/components/alerts/AlertCard';
 import { Skeleton } from '@/components/glass/Skeleton';
 import { LiquidButton } from '@/components/glass/LiquidButton';
@@ -32,37 +33,50 @@ export function DashboardPage() {
   const [alerts, setAlerts] = useState<AlertRecord[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const lastLevelsRef = useRef<Map<string, number | null>>(new Map());
 
-  useEffect(() => {
+  function loadDashboard() {
+    setLoadError(null);
+    setLoading(true);
     (async () => {
-      const [tankRecords, deviceRecords, alertRecords] = await Promise.all([
-        api.tanks.list(),
-        api.devices.list(),
-        api.alerts.list(),
-      ]);
-      const displayTanks = await Promise.all(
-        tankRecords.map(async (record) => {
-          let dt = toDisplayTank(record);
-          const match = deviceRecords.find((d) => d.tankId === record._id);
-          if (match) {
-            try {
-              const logs = await api.telemetry.logs(match.deviceId, 1);
-              if (logs[0]) {
-                lastLevelsRef.current.set(record._id, logs[0].waterLevel);
-                dt = mergeLiveTank(dt, match, logs[0]);
-              }
-            } catch { /* live unavailable */ }
-          }
-          return dt;
-        }),
-      );
-      setDevices(deviceRecords);
-      setAlerts(alertRecords);
-      setTanks(displayTanks);
-      setLoading(false);
-      try { setAnalytics(await api.analytics.get('7D')); } catch { /* non-critical */ }
+      try {
+        const [tankRecords, deviceRecords, alertRecords] = await Promise.all([
+          api.tanks.list(),
+          api.devices.list(),
+          api.alerts.list(),
+        ]);
+        const displayTanks = await Promise.all(
+          tankRecords.map(async (record) => {
+            let dt = toDisplayTank(record);
+            const match = deviceRecords.find((d) => d.tankId === record._id);
+            if (match) {
+              try {
+                const logs = await api.telemetry.logs(match.deviceId, 1);
+                if (logs[0]) {
+                  lastLevelsRef.current.set(record._id, logs[0].waterLevel);
+                  dt = mergeLiveTank(dt, match, logs[0]);
+                }
+              } catch { /* live unavailable */ }
+            }
+            return dt;
+          }),
+        );
+        setDevices(deviceRecords);
+        setAlerts(alertRecords);
+        setTanks(displayTanks);
+        try { setAnalytics(await api.analytics.get('7D')); } catch { /* non-critical */ }
+      } catch {
+        setLoadError('Failed to load dashboard data.');
+      } finally {
+        setLoading(false);
+      }
     })();
+  }
+
+  useEffect(() => {
+    loadDashboard();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useTanksSubscription(tanks.map((t) => t.id));
@@ -86,6 +100,30 @@ export function DashboardPage() {
     setAlerts((prev) => [alert, ...prev.filter((a) => a._id !== alert._id)]);
   }, []);
   useAlertUpdates(handleNewAlert);
+
+  const deviceIds = devices.map((d) => d.deviceId);
+  const { telemetry: mqttTelemetry, connected: mqttConnected } = useMqttTelemetry(deviceIds);
+
+  useEffect(() => {
+    Object.values(mqttTelemetry).forEach((live) => {
+      const device = devices.find((d) => d.deviceId === live.deviceId);
+      if (!device?.tankId) return;
+      const tankId = device.tankId;
+      setTanks((prev) =>
+        prev.map((t) => {
+          if (t.id !== tankId) return t;
+          return {
+            ...t,
+            ...(live.waterLevel != null && { fillLevel: live.waterLevel, percentage: Math.round(live.waterLevel * 100) }),
+            ...(live.ph != null && { ph: live.ph }),
+            ...(live.temperature != null && { temperature: live.temperature }),
+            ...(live.battery != null && { battery: live.battery }),
+            connected: true,
+          };
+        }),
+      );
+    });
+  }, [mqttTelemetry]);
 
   async function markRead(id: string) {
     setAlerts((prev) => prev.map((a) => (a._id === id ? { ...a, read: true } : a)));
@@ -145,6 +183,29 @@ export function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* MQTT live indicator */}
+          <div
+            className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold"
+            style={{
+              background: mqttConnected ? 'rgba(34,211,238,0.1)' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${mqttConnected ? 'rgba(34,211,238,0.35)' : 'rgba(255,255,255,0.08)'}`,
+              color: mqttConnected ? '#22D3EE' : 'rgba(244,251,255,0.3)',
+              fontFamily: 'var(--font-body)',
+              transition: 'all 0.4s',
+            }}
+          >
+            <span
+              style={{
+                width: 7, height: 7, borderRadius: '50%',
+                background: mqttConnected ? '#22D3EE' : 'rgba(255,255,255,0.2)',
+                boxShadow: mqttConnected ? '0 0 6px #22D3EE' : 'none',
+                animation: mqttConnected ? 'pulse 1.5s infinite' : 'none',
+                display: 'inline-block',
+              }}
+            />
+            MQTT {mqttConnected ? 'LIVE' : 'OFF'}
+          </div>
+
           {unreadAlerts.length > 0 && (
             <button
               type="button"
@@ -169,6 +230,24 @@ export function DashboardPage() {
           />
         </div>
       </motion.div>
+
+      {/* ── Load Error Banner ────────────────────── */}
+      {loadError && (
+        <div
+          className="mb-5 flex items-center justify-between rounded-xl px-4 py-3"
+          style={{ background: 'rgba(251,113,133,0.08)', border: '1px solid rgba(251,113,133,0.2)' }}
+        >
+          <p className="text-sm" style={{ color: '#FB7185', fontFamily: 'var(--font-body)' }}>{loadError}</p>
+          <button
+            type="button"
+            onClick={loadDashboard}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all hover:opacity-80"
+            style={{ background: 'rgba(251,113,133,0.12)', border: '1px solid rgba(251,113,133,0.25)', color: '#FB7185', fontFamily: 'var(--font-body)' }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* ── Metrics Strip ────────────────────────── */}
       {loading ? (

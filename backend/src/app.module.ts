@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule } from '@nestjs/throttler';
 import configuration from './config/configuration';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -18,6 +19,7 @@ import { BootstrapModule } from './bootstrap/bootstrap.module';
 import { SuperAdminModule } from './super-admin/super-admin.module';
 import { AdminModule } from './admin/admin.module';
 import { ComplaintsModule } from './complaints/complaints.module';
+import { SystemConfigModule } from './system-config/system-config.module';
 
 @Module({
   imports: [
@@ -25,6 +27,7 @@ import { ComplaintsModule } from './complaints/complaints.module';
       isGlobal: true,
       load: [configuration],
     }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),
     ScheduleModule.forRoot(),
     MongooseModule.forRootAsync({
       useFactory: async () => {
@@ -51,6 +54,7 @@ import { ComplaintsModule } from './complaints/complaints.module';
     SuperAdminModule,
     AdminModule,
     ComplaintsModule,
+    SystemConfigModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -54,10 +54,13 @@ export function AlertsPage() {
 
   async function markAllRead() {
     const unread = alerts.filter((a) => !a.read);
-    setAlerts((prev) => prev.map((a) => ({ ...a, read: true })));
+    const prev = alerts;
+    setAlerts(alerts.map((a) => ({ ...a, read: true })));
     try {
       await Promise.all(unread.map((a) => api.alerts.markRead(a._id, true)));
-    } catch { /* revert on failure is complex, skip */ }
+    } catch {
+      setAlerts(prev);
+    }
   }
 
   const filtered = filter === 'all' ? alerts : alerts.filter((a) => a.severity === filter);

@@ -10,6 +10,13 @@ export class ClaimDeviceDto {
   registrationCode: string;
 
   @ApiProperty({
+    example: '482910',
+    description: 'Activation PIN printed on the device label',
+  })
+  @IsString()
+  activationPin: string;
+
+  @ApiProperty({
     example: '64abc...',
     description: 'Tank ID to link this device to',
   })

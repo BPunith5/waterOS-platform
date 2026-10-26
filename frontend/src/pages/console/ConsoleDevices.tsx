@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, RefreshCw, RotateCw, Trash2, Download, Copy, Check, X } from 'lucide-react';
+import { Plus, RefreshCw, RotateCw, Trash2, Download, Copy, Check, X, QrCode } from 'lucide-react';
 import { api, type DeviceRecord, type ProvisionedDeviceResult } from '@/lib/api';
 
 function CopyCell({ value }: { value: string }) {
@@ -58,9 +58,60 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
+function QrModal({ device, onClose }: { device: DeviceRecord; onClose: () => void }) {
+  function downloadQr() {
+    if (!device.qrCode) return;
+    const a = document.createElement('a');
+    a.href = device.qrCode;
+    a.download = `${device.deviceName}-qr.png`;
+    a.click();
+  }
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative rounded-2xl p-6 w-full max-w-sm"
+        style={{ background: '#03142E', border: '1px solid rgba(34,211,238,0.2)' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <button onClick={onClose} className="absolute top-4 right-4 rounded-lg p-1 hover:bg-white/10">
+          <X size={15} color="rgba(244,251,255,0.5)" />
+        </button>
+        <p className="text-base font-bold mb-1" style={{ color: '#F4FBFF', fontFamily: 'var(--font-heading)' }}>{device.deviceName}</p>
+        <p className="text-xs mb-4" style={{ color: 'rgba(244,251,255,0.4)', fontFamily: 'var(--font-body)' }}>Scan this QR code to register the device</p>
+
+        {device.qrCode ? (
+          <img src={device.qrCode} alt="QR code" className="w-48 h-48 mx-auto rounded-xl mb-4" style={{ border: '1px solid rgba(255,255,255,0.1)', background: '#fff' }} />
+        ) : (
+          <div className="w-48 h-48 mx-auto rounded-xl mb-4 flex items-center justify-center" style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)' }}>
+            <p className="text-xs text-center" style={{ color: 'rgba(244,251,255,0.3)', fontFamily: 'var(--font-body)' }}>No QR — rotate code to generate</p>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-2 mb-4">
+          <CredRow label="Registration Code" value={device.registrationCode ?? '—'} mono />
+          <CredRow label="Device ID" value={device.deviceId} mono />
+        </div>
+
+        {device.qrCode && (
+          <button
+            onClick={downloadQr}
+            className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold"
+            style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.3)', color: '#22D3EE', fontFamily: 'var(--font-body)' }}
+          >
+            <Download size={14} /> Download QR
+          </button>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
 export function ConsoleDevices() {
   const [devices, setDevices] = useState<DeviceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [listError, setListError] = useState<string | null>(null);
   const [provisionForm, setProvisionForm] = useState({ deviceName: '', adminId: '' });
   const [batchForm, setBatchForm] = useState({ namePrefix: '', count: 5, adminId: '' });
   const [provisioning, setProvisioning] = useState(false);
@@ -68,13 +119,15 @@ export function ConsoleDevices() {
   const [batchCsv, setBatchCsv] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'single' | 'batch'>('single');
   const [singleResult, setSingleResult] = useState<ProvisionedDeviceResult | null>(null);
+  const [qrDevice, setQrDevice] = useState<DeviceRecord | null>(null);
 
   useEffect(() => { load(); }, []);
 
   async function load() {
     setLoading(true);
+    setListError(null);
     try { setDevices(await api.superadmin.listDevices()); }
-    catch { /* noop */ }
+    catch { setListError('Failed to load devices. Check your connection and try again.'); }
     finally { setLoading(false); }
   }
 
@@ -121,10 +174,11 @@ export function ConsoleDevices() {
     URL.revokeObjectURL(url);
   }
 
-  async function handleRotateCode(deviceId: string) {
+  async function handleRotateCode(device: DeviceRecord) {
     try {
-      const res = await api.superadmin.rotateCode(deviceId);
-      alert(`New registration code: ${res.registrationCode}`);
+      const res = await api.superadmin.rotateCode(device._id);
+      const updated = { ...device, registrationCode: res.registrationCode, qrCode: res.qrCodeDataUrl };
+      setQrDevice(updated);
       load();
     } catch { /* noop */ }
   }
@@ -137,6 +191,7 @@ export function ConsoleDevices() {
 
   return (
     <div className="max-w-5xl">
+      {qrDevice && <QrModal device={qrDevice} onClose={() => setQrDevice(null)} />}
       <h1 className="text-xl font-bold mb-6" style={{ color: '#F4FBFF', fontFamily: 'var(--font-heading)' }}>Device Provisioning</h1>
 
       {/* Provision tabs */}
@@ -299,7 +354,18 @@ export function ConsoleDevices() {
           </button>
         </div>
 
-        {loading ? (
+        {listError ? (
+          <div className="flex items-center justify-between px-5 py-4">
+            <p className="text-sm" style={{ color: '#FB7185', fontFamily: 'var(--font-body)' }}>{listError}</p>
+            <button
+              onClick={load}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all hover:opacity-80"
+              style={{ background: 'rgba(251,113,133,0.1)', border: '1px solid rgba(251,113,133,0.25)', color: '#FB7185', fontFamily: 'var(--font-body)' }}
+            >
+              Retry
+            </button>
+          </div>
+        ) : loading ? (
           <div className="py-12 text-center text-sm" style={{ color: 'rgba(244,251,255,0.42)', fontFamily: 'var(--font-body)' }}>Loading…</div>
         ) : devices.length === 0 ? (
           <div className="py-12 text-center text-sm" style={{ color: 'rgba(244,251,255,0.42)', fontFamily: 'var(--font-body)' }}>No devices provisioned yet</div>
@@ -337,9 +403,16 @@ export function ConsoleDevices() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1.5">
+                        <button
+                          onClick={() => setQrDevice(d)}
+                          className="p-1.5 rounded-lg hover:bg-cyan-500/10 transition-colors"
+                          title="View QR code"
+                        >
+                          <QrCode size={13} color="#22D3EE" />
+                        </button>
                         {d.status === 'unclaimed' && (
                           <button
-                            onClick={() => handleRotateCode(d._id)}
+                            onClick={() => handleRotateCode(d)}
                             className="p-1.5 rounded-lg hover:bg-yellow-500/10 transition-colors"
                             title="Rotate registration code"
                           >

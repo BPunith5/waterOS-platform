@@ -86,11 +86,16 @@ export class SuperAdminController {
 
   @Get('devices')
   @ApiOperation({ summary: 'List all devices (all users)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Max records (default 50, max 200)' })
+  @ApiQuery({ name: 'skip', required: false, type: Number, description: 'Records to skip (default 0)' })
   @ApiResponse({ status: 200, description: 'Array of device documents with populated claimedBy and assignedAdminIds' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  listAllDevices() {
-    return this.superAdminService.listAllDevices();
+  listAllDevices(@Query('limit') limit?: string, @Query('skip') skip?: string) {
+    return this.superAdminService.listAllDevices(
+      limit ? parseInt(limit, 10) : 50,
+      skip ? parseInt(skip, 10) : 0,
+    );
   }
 
   @Get('devices/:id')
@@ -139,11 +144,16 @@ export class SuperAdminController {
 
   @Get('users')
   @ApiOperation({ summary: 'List all regular users' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Max records (default 50, max 200)' })
+  @ApiQuery({ name: 'skip', required: false, type: Number, description: 'Records to skip (default 0)' })
   @ApiResponse({ status: 200, description: 'Array of user documents' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  listAllUsers() {
-    return this.superAdminService.listAllUsers();
+  listAllUsers(@Query('limit') limit?: string, @Query('skip') skip?: string) {
+    return this.superAdminService.listAllUsers(
+      limit ? parseInt(limit, 10) : 50,
+      skip ? parseInt(skip, 10) : 0,
+    );
   }
 
   // ─── Audit Log ─────────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -21,6 +22,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Submit credentials — sends OTP to email' })
   @ApiResponse({ status: 200, description: 'Returns { message, email }' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
@@ -29,6 +31,7 @@ export class AuthController {
   }
 
   @Post('verify-otp')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Verify OTP — returns JWT on success' })
   @ApiResponse({ status: 200, description: 'Returns { user, token }' })
   @ApiResponse({ status: 401, description: 'Invalid or expired OTP' })
@@ -38,6 +41,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT')
+  @SkipThrottle()
   @Get('me')
   @ApiOperation({ summary: 'Get the currently authenticated user' })
   me(@CurrentUser() user: UserDocument) {

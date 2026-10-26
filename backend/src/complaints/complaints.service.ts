@@ -30,11 +30,14 @@ export class ComplaintsService {
     return complaint.save();
   }
 
-  findAll(): Promise<ComplaintDocument[]> {
+  findAll(limit = 50, skip = 0): Promise<ComplaintDocument[]> {
+    const safeLimit = Math.min(limit, 200);
     return this.complaintModel
       .find()
       .populate(POPULATE_OPTS)
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(safeLimit)
       .exec();
   }
 

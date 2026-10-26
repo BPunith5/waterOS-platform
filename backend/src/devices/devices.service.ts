@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { TanksService } from '../tanks/tanks.service';
@@ -74,24 +74,44 @@ export class DevicesService {
     return device;
   }
 
-  async claimDevice(userId: Types.ObjectId, dto: ClaimDeviceDto): Promise<DeviceDocument> {
-    // Normalize registration code: strip dashes, uppercase
-    const normalizedCode = dto.registrationCode.replace(/-/g, '').toUpperCase();
-    const formattedCode = `${normalizedCode.slice(0, 4)}-${normalizedCode.slice(4, 8)}-${normalizedCode.slice(8, 12)}-${normalizedCode.slice(12, 16)}`;
+  async verifyClaimCode(dto: ClaimDeviceDto): Promise<{ valid: boolean }> {
+    const deviceId = dto.registrationCode.replace(/-/g, '').toUpperCase();
+    const device = await this.deviceModel.findOne({ deviceId }).exec();
+    if (!device) throw new NotFoundException('Device not found — check your device ID');
+    if (device.activationPin !== dto.activationPin) throw new ForbiddenException('Incorrect activation PIN — check the PIN on your device label');
+    if (device.status === 'active') throw new ForbiddenException('This device is already registered to an account');
+    if (device.status !== 'unclaimed') throw new ForbiddenException('This device is not available for registration');
+    return { valid: true };
+  }
 
-    const device = await this.deviceModel.findOne({ registrationCode: formattedCode }).exec();
-    if (!device) throw new NotFoundException('Device not found — check your registration code');
-    if (device.status !== 'unclaimed') throw new ForbiddenException('Device is not available to claim');
+  async claimDevice(userId: Types.ObjectId, dto: ClaimDeviceDto): Promise<DeviceDocument> {
+    const deviceId = dto.registrationCode.replace(/-/g, '').toUpperCase();
 
     await this.tanksService.findOne(userId, dto.tankId);
 
-    device.claimedBy = userId as unknown as Types.ObjectId;
-    device.claimedAt = new Date();
-    device.userId = userId as unknown as Types.ObjectId;
-    device.tankId = new Types.ObjectId(dto.tankId);
-    device.status = 'active';
-    device.lastSeen = new Date();
-    await device.save();
+    // Atomic findOneAndUpdate: only succeeds if the device is still unclaimed.
+    // This eliminates the TOCTOU race where two concurrent requests both pass
+    // the check-then-update pattern and double-claim the same device.
+    const device = await this.deviceModel
+      .findOneAndUpdate(
+        { deviceId, activationPin: dto.activationPin, status: 'unclaimed' },
+        {
+          $set: {
+            status: 'active',
+            userId,
+            tankId: new Types.ObjectId(dto.tankId),
+            claimedBy: userId,
+            claimedAt: new Date(),
+            lastSeen: new Date(),
+          },
+        },
+        { new: true },
+      )
+      .exec();
+
+    if (!device) {
+      throw new ConflictException('Device already claimed or invalid credentials');
+    }
 
     return device;
   }
